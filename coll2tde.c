@@ -1,7 +1,16 @@
 #include <bson.h>
 #include <mongoc.h>
 #include <stdio.h>
+#include <getopt.h>
 #include "DataExtract.h"
+#include <unistd.h>
+
+static int verbose_flag;
+
+void print_usage() {
+    printf("Usage: coll2tde [v] -h HOST -d DATABASE -c COLLECTION -s "
+           "COLUMNS -o TDEFILE\n");
+}
 
 #define TryOp(x) if (x != TAB_RESULT_Success) { \
     fprintf(stderr, "Error: %ls\n", TabGetLastErrorMessage()); \
@@ -101,9 +110,46 @@ void InsertData( TAB_HANDLE hTable )
 }
 
 int
-main (int   argc,
-      char *argv[])
-{
+main (int   argc, char *argv[]){
+    int opt= 0;
+    int host = -1, database = -1, collection_name = -1, filename =-1;
+    int columns = -1;
+    
+    static struct option long_options[] = {
+        {"host",      required_argument,       0,  'h' },
+        {"database", no_argument,       0,  'd' },
+        {"collection",    required_argument, 0,  'c' },
+        {"columns",   required_argument, 0,  999 },
+        {"filename",   required_argument, 0,  'f' },
+        {0,           0,                 0,  0   }
+    };
+
+    int long_index =0;
+    while ((opt = getopt_long(argc, argv,"h:d:c:f:", 
+                   long_options, &long_index )) != -1) {
+        switch (opt) {
+             case 'h' : host = 10;
+                 break;
+             case 'd' : database = 20;
+                 break;
+             case 'c' : collection_name = 30; 
+                 break;
+             case 'f' : filename = 40;
+                 break;
+             case 999 : columns = 50;
+                        printf("%d\n", columns);
+                 break;
+             default: print_usage(); 
+                 exit(EXIT_FAILURE);
+        }
+
+
+    }
+    if (host == -1 || database ==-1) {
+        print_usage();
+        exit(EXIT_FAILURE);
+    }
+
     TAB_HANDLE hExtract;
     TAB_HANDLE hTableDef;
     TAB_HANDLE hTable;
