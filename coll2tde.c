@@ -2,8 +2,12 @@
 #include <mongoc.h>
 #include <stdio.h>
 #include <getopt.h>
-#include "DataExtract.h"
+#include <string.h>
 #include <unistd.h>
+#include "DataExtract.h"
+
+
+#define COLS 999 
 
 static int verbose_flag;
 
@@ -111,15 +115,18 @@ void InsertData( TAB_HANDLE hTable )
 
 int
 main (int   argc, char *argv[]){
-    int opt= 0;
-    int host = -1, database = -1, collection_name = -1, filename =-1;
-    int columns = -1;
+    int opt = 0;
+    char *host = NULL;
+    char *database = NULL;
+    char *collection_name = NULL;
+    char *filename = NULL;
+    char *columns = NULL;
     
     static struct option long_options[] = {
         {"host",      required_argument,       0,  'h' },
         {"database", no_argument,       0,  'd' },
         {"collection",    required_argument, 0,  'c' },
-        {"columns",   required_argument, 0,  999 },
+        {"columns",   required_argument, 0,  COLS },
         {"filename",   required_argument, 0,  'f' },
         {0,           0,                 0,  0   }
     };
@@ -128,16 +135,15 @@ main (int   argc, char *argv[]){
     while ((opt = getopt_long(argc, argv,"h:d:c:f:", 
                    long_options, &long_index )) != -1) {
         switch (opt) {
-             case 'h' : host = 10;
+             case 'h' : host = optarg;
                  break;
-             case 'd' : database = 20;
+             case 'd' : database = optarg;
                  break;
-             case 'c' : collection_name = 30; 
+             case 'c' : collection_name = optarg; 
                  break;
-             case 'f' : filename = 40;
+             case 'f' : filename = optarg;
                  break;
-             case 999 : columns = 50;
-                        printf("%d\n", columns);
+             case COLS : columns = optarg;
                  break;
              default: print_usage(); 
                  exit(EXIT_FAILURE);
@@ -145,11 +151,26 @@ main (int   argc, char *argv[]){
 
 
     }
-    if (host == -1 || database ==-1) {
+    /* if no file name is given the collection_name will be appended tde */
+    printf("host: %s\n", host);
+    printf("database: %s\n", database);
+    printf("collection_name: %s\n", collection_name);
+
+    if ( host == NULL || database == NULL || collection_name == NULL)  {
         print_usage();
         exit(EXIT_FAILURE);
     }
+    
+    if ( filename == NULL ) {
+        filename = strcat(collection_name, ".tde");  
+    }
+    
+    if ( columns != NULL ) {
+        printf("columns: %s\n", columns); 
+    }
+   
 
+    printf("filename: %s\n", filename);
     TAB_HANDLE hExtract;
     TAB_HANDLE hTableDef;
     TAB_HANDLE hTable;
