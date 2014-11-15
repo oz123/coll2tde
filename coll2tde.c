@@ -113,6 +113,28 @@ void InsertData( TAB_HANDLE hTable )
     TryOp( TabTableDefinitionClose( hTableDef ) );
 }
 
+/* Wrap all mongodb stuff in a function */
+mongoc_cursor_t *
+get_cursor(char *host, char *db, char *collection_name){
+    
+    mongoc_client_t *client;
+    mongoc_collection_t *collection;
+    mongoc_cursor_t *cursor;
+    const bson_t *doc;
+    bson_t *query;
+    char *str;
+
+    mongoc_init ();
+
+    client = mongoc_client_new("mongodb://localhost:27017/");
+    collection = mongoc_client_get_collection (client, "test", "test");
+    query = bson_new ();
+    cursor = mongoc_collection_find(collection, MONGOC_QUERY_NONE, 
+                                   0, 0, 0, query, NULL, NULL);
+    // TODO: we need to clean those 
+    return cursor;
+}
+
 int
 main (int   argc, char *argv[]){
     int opt = 0;
@@ -213,24 +235,25 @@ main (int   argc, char *argv[]){
     bson_t *query;
     char *str;
 
-    mongoc_init ();
+    //mongoc_init ();
 
-    client = mongoc_client_new("mongodb://localhost:27017/");
-    collection = mongoc_client_get_collection (client, "test", "test");
-    query = bson_new ();
-    cursor = mongoc_collection_find(collection, MONGOC_QUERY_NONE, 
-                                    0, 0, 0, query, NULL, NULL);
-
+    //client = mongoc_client_new("mongodb://localhost:27017/");
+    //collection = mongoc_client_get_collection (client, "test", "test");
+    //query = bson_new ();
+    //cursor = mongoc_collection_find(collection, MONGOC_QUERY_NONE, 
+    //                               0, 0, 0, query, NULL, NULL);
+    cursor = get_cursor(host, database, collection_name);
     while (mongoc_cursor_next (cursor, &doc)) {
         str = bson_as_json (doc, NULL);
         printf ("%s\n", str);
         bson_free (str);
     }
 
-    bson_destroy(query);
     mongoc_cursor_destroy(cursor);
-    mongoc_collection_destroy(collection);
-    mongoc_client_destroy(client);
+    // TODO: clean those
+    // bson_destroy(query);
+    // mongoc_collection_destroy(collection);
+    // mongoc_client_destroy(client);
 
     return 0;
 }
