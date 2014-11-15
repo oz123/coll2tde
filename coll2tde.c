@@ -115,23 +115,20 @@ void InsertData( TAB_HANDLE hTable )
 
 /* Wrap all mongodb stuff in a function */
 mongoc_cursor_t *
-get_cursor(char *host, char *db, char *collection_name){
+get_cursor(char *host, char *db, char *collection_name, bson_t *pquery){
     
     mongoc_client_t *client;
     mongoc_collection_t *collection;
     mongoc_cursor_t *cursor;
     const bson_t *doc;
-    bson_t *query;
     char *str;
 
     mongoc_init ();
 
     client = mongoc_client_new("mongodb://localhost:27017/");
     collection = mongoc_client_get_collection (client, "test", "test");
-    query = bson_new ();
     cursor = mongoc_collection_find(collection, MONGOC_QUERY_NONE, 
-                                   0, 0, 0, query, NULL, NULL);
-    // TODO: we need to clean those 
+                                    0, 0, 0, pquery, NULL, NULL);
     return cursor;
 }
 
@@ -239,10 +236,10 @@ main (int   argc, char *argv[]){
 
     //client = mongoc_client_new("mongodb://localhost:27017/");
     //collection = mongoc_client_get_collection (client, "test", "test");
-    //query = bson_new ();
+    query = bson_new ();
     //cursor = mongoc_collection_find(collection, MONGOC_QUERY_NONE, 
     //                               0, 0, 0, query, NULL, NULL);
-    cursor = get_cursor(host, database, collection_name);
+    cursor = get_cursor(host, database, collection_name, query);
     while (mongoc_cursor_next (cursor, &doc)) {
         str = bson_as_json (doc, NULL);
         printf ("%s\n", str);
@@ -251,8 +248,8 @@ main (int   argc, char *argv[]){
 
     mongoc_cursor_destroy(cursor);
     // TODO: clean those
-    // bson_destroy(query);
-    // mongoc_collection_destroy(collection);
+    bson_destroy(query);
+    //mongoc_collection_destroy(collection);
     // mongoc_client_destroy(client);
 
     return 0;
