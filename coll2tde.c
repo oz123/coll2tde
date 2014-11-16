@@ -248,7 +248,7 @@ main (int   argc, char *argv[]){
 	    r = jsmn_parse(&parser, str, strlen(str), tokens, 10);
         printf("tokens: %d\n", r - 1);
         for (t=0; t<r; t++){
-            //printf("token type %d\n", tokens[t].type);
+            printf("token %d type %d\n", t, tokens[t].type);
             if (tokens[t].type == 3){
                 int size_of_token = tokens[t].end-tokens[t].start;
                 char *item = (char *)malloc((size_of_token+1)*sizeof(char));
