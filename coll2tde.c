@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "DataExtract.h"
+#include "jsmn/jsmn.h"
 
 
 #define COLS 999 
@@ -233,22 +234,28 @@ main (int   argc, char *argv[]){
     const bson_t *doc;
     bson_t *query = NULL;
     char *str;
-
+    int t, r;
+    jsmntok_t tokens[6];
+    jsmn_parser parser;
+    jsmn_init(&parser);
     mongoc_init();
-
-    //client = mongoc_client_new("mongodb://localhost:27017/");
-    //collection = mongoc_client_get_collection (client, "test", "test");
     query = bson_new ();
-    //cursor = mongoc_collection_find(collection, MONGOC_QUERY_NONE, 
-    //                               0, 0, 0, query, NULL, NULL);
     cursor = get_cursor(host, database, collection_name, query, //&collection,
              &collection_p, &client_p);
     while (mongoc_cursor_next (cursor, &doc)) {
         str = bson_as_json (doc, NULL);
         printf ("%s\n", str);
-        bson_free (str);
+	    r = jsmn_parse(&parser, str, strlen(str), tokens, 10);
+        printf("tokens: %d\n", r - 1);
+        for (t=0; t<r; t++){
+            if (tokens[t].type == 3){
+                char *item = malloc(tokens[t].end-tokens[t].start-1);
+                strncpy(item, &str[tokens[t].start], tokens[t].end-tokens[t].start);
+                printf("%s\n", item);
+                free(item);
+            }
+        }
     }
-
     mongoc_cursor_destroy(cursor);
     bson_destroy(query);
     mongoc_collection_destroy(collection_p);
