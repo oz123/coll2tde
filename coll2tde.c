@@ -115,20 +115,22 @@ void InsertData( TAB_HANDLE hTable )
 
 /* Wrap all mongodb stuff in a function */
 mongoc_cursor_t *
-get_cursor(char *host, char *db, char *collection_name, bson_t *pquery){
+get_cursor(char *host, char *db, char *collection_name, bson_t *pquery,
+           mongoc_collection_t **collection_p,
+           mongoc_client_t **client_p){
     
-    mongoc_client_t *client;
-    mongoc_collection_t *collection;
+    //mongoc_client_t *client;
+    //mongoc_collection_t *collection;
     mongoc_cursor_t *cursor;
-    const bson_t *doc;
-    char *str;
+    //const bson_t *doc;
+    //char *str;
 
-    mongoc_init ();
-
-    client = mongoc_client_new("mongodb://localhost:27017/");
-    collection = mongoc_client_get_collection (client, "test", "test");
-    cursor = mongoc_collection_find(collection, MONGOC_QUERY_NONE, 
+    *client_p = mongoc_client_new("mongodb://localhost:27017/");
+    *collection_p = mongoc_client_get_collection (*client_p, "test", "test");
+    cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
                                     0, 0, 0, pquery, NULL, NULL);
+    //*client_p = client;
+    //*collection_p = collection;
     return cursor;
 }
 
@@ -225,21 +227,22 @@ main (int   argc, char *argv[]){
     TryOp( TabExtractClose( hExtract ) );
 
     printf ("done with tableu kram\n");
-    mongoc_client_t *client;
-    mongoc_collection_t *collection;
+    mongoc_client_t *client_p;
+    mongoc_collection_t *collection_p;
     mongoc_cursor_t *cursor;
     const bson_t *doc;
-    bson_t *query;
+    bson_t *query = NULL;
     char *str;
 
-    //mongoc_init ();
+    mongoc_init();
 
     //client = mongoc_client_new("mongodb://localhost:27017/");
     //collection = mongoc_client_get_collection (client, "test", "test");
     query = bson_new ();
     //cursor = mongoc_collection_find(collection, MONGOC_QUERY_NONE, 
     //                               0, 0, 0, query, NULL, NULL);
-    cursor = get_cursor(host, database, collection_name, query);
+    cursor = get_cursor(host, database, collection_name, query, //&collection,
+             &collection_p, &client_p);
     while (mongoc_cursor_next (cursor, &doc)) {
         str = bson_as_json (doc, NULL);
         printf ("%s\n", str);
@@ -247,10 +250,9 @@ main (int   argc, char *argv[]){
     }
 
     mongoc_cursor_destroy(cursor);
-    // TODO: clean those
     bson_destroy(query);
-    //mongoc_collection_destroy(collection);
-    // mongoc_client_destroy(client);
-
+    mongoc_collection_destroy(collection_p);
+    mongoc_client_destroy(client_p);
+    mongoc_cleanup();
     return 0;
 }
