@@ -120,18 +120,26 @@ get_cursor(char *host, char *db, char *collection_name, bson_t *pquery,
            mongoc_collection_t **collection_p,
            mongoc_client_t **client_p){
     
-    //mongoc_client_t *client;
-    //mongoc_collection_t *collection;
     mongoc_cursor_t *cursor;
-    //const bson_t *doc;
-    //char *str;
-
     *client_p = mongoc_client_new("mongodb://localhost:27017/");
     *collection_p = mongoc_client_get_collection (*client_p, "test", "test");
     cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
                                     0, 0, 0, pquery, NULL, NULL);
-    //*client_p = client;
-    //*collection_p = collection;
+    return cursor;
+}
+
+
+/* Wrap all mongodb stuff in a function */
+mongoc_cursor_t *
+get_one(char *host, char *db, char *collection_name, bson_t *pquery,
+           mongoc_collection_t **collection_p,
+           mongoc_client_t **client_p){
+    
+    mongoc_cursor_t *cursor;
+    *client_p = mongoc_client_new("mongodb://localhost:27017/");
+    *collection_p = mongoc_client_get_collection (*client_p, "test", "test");
+    cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
+                                    0, -1, 0, pquery, NULL, NULL);
     return cursor;
 }
 
@@ -240,6 +248,33 @@ main (int   argc, char *argv[]){
     jsmn_init(&parser);
     mongoc_init();
     query = bson_new ();
+    cursor = get_one(host, database, collection_name, query, 
+             &collection_p, &client_p);
+    /*do all the tde configuration of tde here */
+    while (mongoc_cursor_next (cursor, &doc)) {
+        str = bson_as_json (doc, NULL);
+        printf ("%s\n", str);
+	    r = jsmn_parse(&parser, str, strlen(str), tokens, 10);
+        printf("tokens: %d\n", r - 1);
+        for (t=0; t<r; t++){
+            printf("token %d type %d\n", t, tokens[t].type);
+            if (tokens[t].type == 3){
+                int size_of_token = tokens[t].end-tokens[t].start;
+                char *item = (char *)malloc((size_of_token+1)*sizeof(char));
+                strncpy(item, &str[tokens[t].start], size_of_token);
+                item[size_of_token] = '\0'; 
+                //printf("%d\n", t%2);
+                if (t % 2) {
+                    printf("%d key! %s\n", t, item);
+                }else{  
+                printf("%d value %s\n",t, item);
+                } 
+                free(item);
+            }
+        }
+    }
+    
+    /* do all the fun inserting data here ...*/
     cursor = get_cursor(host, database, collection_name, query, //&collection,
              &collection_p, &client_p);
     while (mongoc_cursor_next (cursor, &doc)) {
