@@ -201,6 +201,7 @@ main (int   argc, char *argv[]){
    
 
     printf("filename: %s\n", filename);
+# if 0
     TAB_HANDLE hExtract;
     TAB_HANDLE hTableDef;
     TAB_HANDLE hTable;
@@ -236,6 +237,7 @@ main (int   argc, char *argv[]){
     TryOp( TabExtractClose( hExtract ) );
 
     printf ("done with tableu kram\n");
+# endif 
     mongoc_client_t *client_p;
     mongoc_collection_t *collection_p;
     mongoc_cursor_t *cursor;
@@ -256,6 +258,7 @@ main (int   argc, char *argv[]){
         printf ("%s\n", str);
 	    r = jsmn_parse(&parser, str, strlen(str), tokens, 10);
         printf("tokens: %d\n", r - 1);
+        int skip;
         for (t=0; t<r; t++){
             printf("token %d type %d\n", t, tokens[t].type);
             if (tokens[t].type == 3){
@@ -263,7 +266,14 @@ main (int   argc, char *argv[]){
                 char *item = (char *)malloc((size_of_token+1)*sizeof(char));
                 strncpy(item, &str[tokens[t].start], size_of_token);
                 item[size_of_token] = '\0'; 
-                //printf("%d\n", t%2);
+                if (! strcmp(item, "_id") || ! strcmp(item, "$oid")){
+                    skip = 1;
+                    continue;
+                }
+                if (skip) {
+                    skip = 0;
+                    continue;
+                }
                 if (t % 2) {
                     printf("%d key! %s\n", t, item);
                 }else{  
