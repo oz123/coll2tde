@@ -245,7 +245,7 @@ main (int   argc, char *argv[]){
     bson_t *query = NULL;
     char *str;
     int t, r;
-    jsmntok_t tokens[6];
+    jsmntok_t tokens[9];
     jsmn_parser parser;
     jsmn_init(&parser);
     mongoc_init();
@@ -256,7 +256,7 @@ main (int   argc, char *argv[]){
     while (mongoc_cursor_next (cursor, &doc)) {
         str = bson_as_json (doc, NULL);
         printf ("%s\n", str);
-	    r = jsmn_parse(&parser, str, strlen(str), tokens, 10);
+	    r = jsmn_parse(&parser, str, strlen(str), tokens, 9);
         printf("tokens: %d\n", r - 1);
         int skip;
         for (t=0; t<r; t++){
@@ -280,35 +280,14 @@ main (int   argc, char *argv[]){
                 printf("%d value %s\n",t, item);
                 } 
                 free(item);
+                printf("freed item...\n");
+            } else {
+              printf("Not a key, probably a value..." 
+                     "let's try creating a column type\n");
             }
         }
     }
-    
     /* do all the fun inserting data here ...*/
-    cursor = get_cursor(host, database, collection_name, query, //&collection,
-             &collection_p, &client_p);
-    while (mongoc_cursor_next (cursor, &doc)) {
-        str = bson_as_json (doc, NULL);
-        printf ("%s\n", str);
-	    r = jsmn_parse(&parser, str, strlen(str), tokens, 10);
-        printf("tokens: %d\n", r - 1);
-        for (t=0; t<r; t++){
-            printf("token %d type %d\n", t, tokens[t].type);
-            if (tokens[t].type == 3){
-                int size_of_token = tokens[t].end-tokens[t].start;
-                char *item = (char *)malloc((size_of_token+1)*sizeof(char));
-                strncpy(item, &str[tokens[t].start], size_of_token);
-                item[size_of_token] = '\0'; 
-                //printf("%d\n", t%2);
-                if (t % 2) {
-                    printf("%d key! %s\n", t, item);
-                }else{  
-                printf("%d value %s\n",t, item);
-                } 
-                free(item);
-            }
-        }
-    }
     mongoc_cursor_destroy(cursor);
     bson_destroy(query);
     mongoc_collection_destroy(collection_p);
