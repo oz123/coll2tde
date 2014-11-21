@@ -128,7 +128,7 @@ main (int   argc, char *argv[]){
         int skip;
         for (t=0; t<r; t++){
             printf("token %d type %d\n", t, tokens[t].type);
-            if (tokens[t].type == 3){
+            if (tokens[t].type == JSMN_STRING){
                 int size_of_token = tokens[t].end-tokens[t].start;
                 char *item = (char *)malloc((size_of_token+1)*sizeof(char));
                 strncpy(item, &str[tokens[t].start], size_of_token);
