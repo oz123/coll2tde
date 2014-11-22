@@ -25,7 +25,7 @@ coll2tde:
 		$(shell pkg-config --cflags --libs libmongoc-1.0) \
 
 clean:
-	$(RM) $(TARGETS)
+	$(RM) $(OBJS) coll2tde
 
 
 .PHONY: all clean

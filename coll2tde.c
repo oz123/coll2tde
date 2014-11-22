@@ -6,8 +6,9 @@
 #include <unistd.h>
 #include "DataExtract.h"
 #include "jsmn/jsmn.h"
+#include "json.h"
 
-
+#define JSON_TOKENS 256
 #define COLS 999 
 
 static int verbose_flag;
@@ -112,9 +113,9 @@ main (int   argc, char *argv[]){
     bson_t *query = NULL;
     char *str;
     int t, r;
-    jsmntok_t tokens[13];
-    jsmn_parser parser;
-    jsmn_init(&parser);
+    jsmntok_t tokens[JSON_TOKENS];
+    //jsmn_parser parser;
+    //jsmn_init(&parser);
     mongoc_init();
     query = bson_new ();
     cursor = get_one(host, database, collection_name, query, 
@@ -123,7 +124,8 @@ main (int   argc, char *argv[]){
     while (mongoc_cursor_next (cursor, &doc)) {
         str = bson_as_json (doc, NULL);
         printf ("%s\n", str);
-	    r = jsmn_parse(&parser, str, strlen(str), tokens, 13);
+	    json_tokenise(str);
+        r = 13 ;//jsmn_parse(&parser, str, strlen(str), tokens, JSON_TOKENS);
         printf("tokens: %d\n", r - 1);
         int skip;
         for (t=0; t<r; t++){
