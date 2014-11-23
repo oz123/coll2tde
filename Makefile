@@ -17,7 +17,7 @@ mongo:
 	$(CC) $(CFLAGS) -c mongo.c \
 		$(shell pkg-config --cflags --libs libmongoc-1.0) 
 json:
-	$(CC) ($CFLAGS) -c json.c $(JSMN)
+	$(CC) $(CFLAGS) -c json.c $(JSMN)
 
 coll2tde:
 	$(CC) $(CFLAGS) -o coll2tde $(OBJS) coll2tde.c \
