@@ -1,5 +1,4 @@
 #include <bson.h>
-#include <mongoc.h>
 #include <stdio.h>
 #include <getopt.h>
 #include <string.h>
@@ -7,45 +6,18 @@
 #include "DataExtract.h"
 #include "jsmn/jsmn.h"
 #include "json.h"
+#include "mongo.h"
 
 #define JSON_TOKENS 256
 #define COLS 999 
 
-static int verbose_flag;
+//static int verbose_flag;
 
 void print_usage() {
     printf("Usage: coll2tde [v] -h HOST -d DATABASE -c COLLECTION -s "
            "COLUMNS -o TDEFILE\n");
 }
 
-/* Wrap all mongodb stuff in a function */
-mongoc_cursor_t *
-get_cursor(char *host, char *db, char *collection_name, bson_t *pquery,
-           mongoc_collection_t **collection_p,
-           mongoc_client_t **client_p){
-    
-    mongoc_cursor_t *cursor;
-    *client_p = mongoc_client_new("mongodb://localhost:27017/");
-    *collection_p = mongoc_client_get_collection (*client_p, "test", "test");
-    cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
-                                    0, 0, 0, pquery, NULL, NULL);
-    return cursor;
-}
-
-
-/* Wrap all mongodb stuff in a function */
-mongoc_cursor_t *
-get_one(char *host, char *db, char *collection_name, bson_t *pquery,
-           mongoc_collection_t **collection_p,
-           mongoc_client_t **client_p){
-    
-    mongoc_cursor_t *cursor;
-    *client_p = mongoc_client_new("mongodb://localhost:27017/");
-    *collection_p = mongoc_client_get_collection (*client_p, "test", "test");
-    cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
-                                    0, -1, 0, pquery, NULL, NULL);
-    return cursor;
-}
 
 int
 main (int   argc, char *argv[]){
@@ -114,8 +86,6 @@ main (int   argc, char *argv[]){
     char *str;
     int t, r;
     jsmntok_t tokens[JSON_TOKENS];
-    //jsmn_parser parser;
-    //jsmn_init(&parser);
     mongoc_init();
     query = bson_new ();
     cursor = get_one(host, database, collection_name, query, 
@@ -127,7 +97,7 @@ main (int   argc, char *argv[]){
 	    json_tokenise(str);
         r = 13 ;//jsmn_parse(&parser, str, strlen(str), tokens, JSON_TOKENS);
         printf("tokens: %d\n", r - 1);
-        int skip;
+        int skip = -1;
         for (t=0; t<r; t++){
             printf("token %d type %d\n", t, tokens[t].type);
             if (tokens[t].type == JSMN_STRING){
@@ -156,6 +126,12 @@ main (int   argc, char *argv[]){
             }
         }
     }
+
+    TableauWChar *sOrderTde;
+    TableauWChar *sExtract;
+    ToTableauString( L"order-c.tde", sOrderTde );
+    ToTableauString( L"Extract", sExtract );
+
     /* do all the fun inserting data here ...*/
     mongoc_cursor_destroy(cursor);
     bson_destroy(query);

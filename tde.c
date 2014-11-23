@@ -5,7 +5,7 @@
 #include "DataExtract.h"
 #include "tde.h"
 
-static int verbose_flag;
+//static int verbose_flag;
 
 
 /* Define the table's schema */
