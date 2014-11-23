@@ -7,6 +7,8 @@
 #include "jsmn/jsmn.h"
 #include "json.h"
 #include "mongo.h"
+#include "tde.h"
+#include <wchar.h>
 
 #define JSON_TOKENS 256
 #define COLS 999 
@@ -126,17 +128,27 @@ main (int   argc, char *argv[]){
             }
         }
     }
+    TAB_HANDLE hExtract;
+    //TAB_HANDLE hTableDef;
+    //TAB_HANDLE hTable;
 
-    TableauWChar *sOrderTde;
-    TableauWChar *sExtract;
-    ToTableauString( L"order-c.tde", sOrderTde );
+    wchar_t *fname_w = calloc(strlen(filename) + 1, sizeof(wchar_t));
+    mbstowcs(fname_w, filename, strlen(filename)+1);
+    printf("Creating tde file: %ls\n", fname_w);
+    TableauWChar *sOrderTde = calloc(strlen(filename) + 1, sizeof(TableauWChar));
+    TableauWChar sExtract[8];
+    ToTableauString(fname_w, sOrderTde);
     ToTableauString( L"Extract", sExtract );
+    TryOp( TabExtractCreate( &hExtract, sOrderTde ) );
+    TryOp( TabExtractClose( hExtract ) );
+
 
     /* do all the fun inserting data here ...*/
     mongoc_cursor_destroy(cursor);
     bson_destroy(query);
     mongoc_collection_destroy(collection_p);
     mongoc_client_destroy(client_p);
-    mongoc_cleanup();
+    mongoc_cleanup();  
+
     return 0;
 }

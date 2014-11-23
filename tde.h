@@ -11,3 +11,9 @@
     fprintf(stderr, "Error: %ls\n", TabGetLastErrorMessage()); \
     exit( EXIT_FAILURE ); }
 
+TAB_HANDLE MakeTableDefinition();
+void PrintTableDefinition( TAB_HANDLE hTableDef );
+void InsertData( TAB_HANDLE hTable );
+
+
+
