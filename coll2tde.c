@@ -139,6 +139,8 @@ main (int   argc, char *argv[]){
     TableauWChar sExtract[8];
     ToTableauString(fname_w, sOrderTde);
     ToTableauString( L"Extract", sExtract );
+    char js[] = "{\"foo\":\"int\", \"bar\":\"unicode\"}";
+    hExtract = make_table_definition(js);
     TryOp( TabExtractCreate( &hExtract, sOrderTde ) );
     TryOp( TabExtractClose( hExtract ) );
 

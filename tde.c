@@ -7,7 +7,94 @@
 
 //static int verbose_flag;
 
+TAB_HANDLE make_table_definition(char *js){
 
+    TAB_HANDLE hExtract = NULL;
+    typedef enum { START, KEY, PRINT, SKIP, STOP } parse_state;
+    parse_state state = START;
+    jsmntok_t *tokens = json_tokenise(js);
+    printf("js: %s\n", js);
+    size_t object_tokens = 0;
+
+    for (size_t i = 0, j = 1; j > 0; i++, j--)
+    {
+        jsmntok_t *t = &tokens[i];
+
+        // Should never reach uninitialized tokens
+        log_assert(t->start != -1 && t->end != -1);
+
+        if (t->type == JSMN_ARRAY || t->type == JSMN_OBJECT)
+            j += t->size;
+        switch (state)
+        {
+            case START:
+                if (t->type != JSMN_OBJECT)
+                    log_die("Invalid response: root element must be an object.");
+
+                state = KEY;
+                object_tokens = t->size;
+                printf("Object_tokens: %zu\n", object_tokens);
+                if (object_tokens == 0)
+                    state = STOP;
+
+                if (object_tokens % 2 != 0)
+                    log_die("Invalid response: object must have even number of children.");
+
+                break;
+
+            case KEY:
+                object_tokens--;
+
+                if (t->type != JSMN_STRING)
+                    log_die("Invalid response: object keys must be strings.");
+
+                state = SKIP;
+                char *str = NULL;
+                if (i % 2) {
+                    str = json_token_tostr(js, t);
+                    printf("KEY %s\n", str);
+                    state = PRINT;
+                }
+                break;
+
+            case SKIP:
+                if (t->type != JSMN_STRING && t->type != JSMN_PRIMITIVE)
+                    log_die("Invalid response: object values must be strings or primitives.");
+
+                object_tokens--;
+                state = KEY;
+
+                if (object_tokens == 0)
+                    state = STOP;
+
+                break;
+
+            case PRINT:
+                if (t->type != JSMN_STRING && t->type != JSMN_PRIMITIVE)
+                    log_die("Invalid response: object values must be strings or primitives.");
+
+                str = json_token_tostr(js, t);
+                printf("VALUE %s\n", str);
+                object_tokens--;
+                state = KEY;
+
+                if (object_tokens == 0)
+                    state = STOP;
+
+                break;
+
+            case STOP:
+                // Just consume the tokens
+                break;
+
+            default:
+                log_die("Invalid state %u", state);
+        }
+    }
+
+    return hExtract;
+
+}
 /* Define the table's schema */
 TAB_HANDLE MakeTableDefinition()
 {

@@ -27,4 +27,15 @@ jsmntok_t * json_tokenise(char *js)
 
     return tokens;
 }
+bool json_token_streq(char *js, jsmntok_t *t, char *s)
+{
+    return (strncmp(js + t->start, s, t->end - t->start) == 0
+            && strlen(s) == (size_t) (t->end - t->start));
+}
+
+char * json_token_tostr(char *js, jsmntok_t *t)
+{
+    js[t->end] = '\0';
+    return js + t->start;
+}
 

@@ -3,7 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 #include "DataExtract.h"
-
+#include "log.h"
+#include "jsmn/jsmn.h"
+#include "json.h"
 
 #define COLS 999 
 
@@ -12,6 +14,7 @@
     exit( EXIT_FAILURE ); }
 
 TAB_HANDLE MakeTableDefinition();
+TAB_HANDLE make_table_definition();
 void PrintTableDefinition( TAB_HANDLE hTableDef );
 void InsertData( TAB_HANDLE hTable );
 
