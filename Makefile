@@ -4,22 +4,25 @@ TDE_LIBS=-L/usr/lib/dataextract -lDataExtract
 TDE_LDFLAGS=-Wl,-rpath=/usr/lib/dataextract
 JSMN=-Ljsmn/ -ljsmn 
 
-OBJS=mongo.o tde.o json.o
+OBJS=mongo.o tde.o json.o log.o
 
-.PHONY: all clean
+.PHONY: all clean 
 
-all: json tde mongo coll2tde
+all:  coll2tde
 
-tde:
+log.o:
+	$(CC) $(CFLAGS) -c log.c 
+
+tde.o:
 	$(CC) $(CFLAGS) -c tde.c $(TDE_LIBS) $(TDE_LDFLAGS) 
 
-mongo:
+mongo.o:
 	$(CC) $(CFLAGS) -c mongo.c \
 		$(shell pkg-config --cflags --libs libmongoc-1.0) 
-json:
+json.o:
 	$(CC) $(CFLAGS) -c json.c $(JSMN)
 
-coll2tde:
+coll2tde: $(OBJS) 	
 	$(CC) $(CFLAGS) -o coll2tde $(OBJS) coll2tde.c \
 		$(TDE_LIBS) $(TDE_LDFLAGS) $(JSMN) \
 		$(shell pkg-config --cflags --libs libmongoc-1.0) \
