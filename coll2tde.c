@@ -85,52 +85,14 @@ main (int   argc, char *argv[]){
     mongoc_cursor_t *cursor;
     const bson_t *doc;
     bson_t *query = NULL;
-    char *str;
-    int t, r;
-    jsmntok_t tokens[JSON_TOKENS];
+    bson_t *fields = NULL;
     mongoc_init();
     query = bson_new ();
-    cursor = get_one(host, database, collection_name, query, 
-             &collection_p, &client_p);
-    /*do all the tde configuration of tde here */
-    while (mongoc_cursor_next (cursor, &doc)) {
-        str = bson_as_json (doc, NULL);
-        printf ("%s\n", str);
-	    json_tokenise(str);
-        r = 13 ;//jsmn_parse(&parser, str, strlen(str), tokens, JSON_TOKENS);
-        printf("tokens: %d\n", r - 1);
-        int skip = -1;
-        for (t=0; t<r; t++){
-            printf("token %d type %d\n", t, tokens[t].type);
-            if (tokens[t].type == JSMN_STRING){
-                int size_of_token = tokens[t].end-tokens[t].start;
-                char *item = (char *)malloc((size_of_token+1)*sizeof(char));
-                strncpy(item, &str[tokens[t].start], size_of_token);
-                item[size_of_token] = '\0'; 
-                if (! strcmp(item, "_id") || ! strcmp(item, "$oid")){
-                    skip = 1;
-                    continue;
-                }
-                if (skip) {
-                    skip = 0;
-                    continue;
-                }
-                if (t % 2) {
-                    printf("%d key! %s\n", t, item);
-                }else{  
-                printf("%d value %s\n",t, item);
-                } 
-                free(item);
-                printf("freed item...\n");
-            } else {
-              printf("Not a key, probably a value..." 
-                     "let's try creating a column type\n");
-            }
-        }
-    }
+    fields = bson_new ();
+    fields = BCON_NEW ("_id", BCON_INT32 (0));
+    printf("Query is : %s\n", bson_as_json(query, NULL));
+    printf("Fields is : %s\n", bson_as_json(fields, NULL));
     TAB_HANDLE hExtract;
-    //TAB_HANDLE hTableDef;
-    //TAB_HANDLE hTable;
 
     wchar_t *fname_w = calloc(strlen(filename) + 1, sizeof(wchar_t));
     mbstowcs(fname_w, filename, strlen(filename)+1);
@@ -139,8 +101,13 @@ main (int   argc, char *argv[]){
     TableauWChar sExtract[8];
     ToTableauString(fname_w, sOrderTde);
     ToTableauString( L"Extract", sExtract );
-    char js[] = "{\"foo\":\"int\", \"bar\":\"unicode\"}";
-    hExtract = make_table_definition(js);
+    char *jsstr = NULL;
+    cursor = get_one(host, database, collection_name, query, 
+             &collection_p, &client_p);
+    while (mongoc_cursor_next (cursor, &doc)) {
+        jsstr = bson_as_json (doc, NULL);
+    }
+    hExtract = make_table_definition(jsstr);
     TryOp( TabExtractCreate( &hExtract, sOrderTde ) );
     TryOp( TabExtractClose( hExtract ) );
 

@@ -5,8 +5,8 @@
 #include "DataExtract.h"
 #include "tde.h"
 
-//static int verbose_flag;
 
+//static int verbose_flag;
 TAB_HANDLE make_table_definition(char *js){
 
     TAB_HANDLE hExtract = NULL;
@@ -14,9 +14,12 @@ TAB_HANDLE make_table_definition(char *js){
     parse_state state = START;
     jsmntok_t *tokens = json_tokenise(js);
     printf("js: %s\n", js);
-    size_t object_tokens = 0;
-
-    for (size_t i = 0, j = 1; j > 0; i++, j--)
+    size_t object_tokens = tokens[0].size;
+    char **column_names = malloc(object_tokens / 2 * sizeof(char*));
+    char **column_values = malloc(object_tokens / 2 * sizeof(char*));
+    printf("size of : %lu\n", object_tokens/2);
+    object_tokens = 0;
+    for (size_t i = 0, j = 1, cn = 0, cv = 0 ; j > 0; i++, j--)
     {
         jsmntok_t *t = &tokens[i];
 
@@ -52,7 +55,9 @@ TAB_HANDLE make_table_definition(char *js){
                 char *str = NULL;
                 if (i % 2) {
                     str = json_token_tostr(js, t);
-                    printf("KEY %s\n", str);
+                    column_names[cn] = str;
+                    printf("KEY %s\n", column_names[cn]);
+                    cn++;
                     state = PRINT;
                 }
                 break;
@@ -74,7 +79,10 @@ TAB_HANDLE make_table_definition(char *js){
                     log_die("Invalid response: object values must be strings or primitives.");
 
                 str = json_token_tostr(js, t);
-                printf("VALUE %s\n", str);
+                //if (! (i % 2))
+                column_values[cv] = str;
+                printf("%zu VALUE %s\n", i, column_values[cv]);
+                cv++;
                 object_tokens--;
                 state = KEY;
 
