@@ -3,11 +3,13 @@
 
 /* get_one never returns _id */
 mongoc_cursor_t *
-get_one(char *host, char *db, char *collection_name, bson_t *pquery,
+get_one(char *host, char *db, char *collection_name,
            mongoc_collection_t **collection_p,
            mongoc_client_t **client_p){
-    
+    mongoc_init();
+    bson_t *query = NULL;
     bson_t *fields = NULL;
+    query = bson_new ();
     fields = bson_new ();
     fields = BCON_NEW("_id", BCON_INT32 (0));
 
@@ -15,7 +17,9 @@ get_one(char *host, char *db, char *collection_name, bson_t *pquery,
     *client_p = mongoc_client_new("mongodb://localhost:27017/");
     *collection_p = mongoc_client_get_collection (*client_p, "test", "test");
     cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
-                                    0, -1, 0, pquery, fields, NULL);
+                                    0, -1, 0, query, fields, NULL);
+    bson_destroy(query);
+    bson_destroy(fields);
     return cursor;
 
 }

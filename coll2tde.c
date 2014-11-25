@@ -84,14 +84,6 @@ main (int   argc, char *argv[]){
     mongoc_collection_t *collection_p;
     mongoc_cursor_t *cursor;
     const bson_t *doc;
-    bson_t *query = NULL;
-    bson_t *fields = NULL;
-    mongoc_init();
-    query = bson_new ();
-    fields = bson_new ();
-    fields = BCON_NEW ("_id", BCON_INT32 (0));
-    printf("Query is : %s\n", bson_as_json(query, NULL));
-    printf("Fields is : %s\n", bson_as_json(fields, NULL));
     TAB_HANDLE hExtract;
 
     wchar_t *fname_w = calloc(strlen(filename) + 1, sizeof(wchar_t));
@@ -102,8 +94,7 @@ main (int   argc, char *argv[]){
     ToTableauString(fname_w, sOrderTde);
     ToTableauString( L"Extract", sExtract );
     char *jsstr = NULL;
-    cursor = get_one(host, database, collection_name, query, 
-             &collection_p, &client_p);
+    cursor = get_one(host, database, collection_name, &collection_p, &client_p);
     while (mongoc_cursor_next (cursor, &doc)) {
         jsstr = bson_as_json (doc, NULL);
     }
@@ -114,7 +105,6 @@ main (int   argc, char *argv[]){
 
     /* do all the fun inserting data here ...*/
     mongoc_cursor_destroy(cursor);
-    bson_destroy(query);
     mongoc_collection_destroy(collection_p);
     mongoc_client_destroy(client_p);
     mongoc_cleanup();  
