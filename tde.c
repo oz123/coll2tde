@@ -5,6 +5,10 @@
 #include "DataExtract.h"
 #include "tde.h"
 
+/* 
+ * Should be able to query like this ...
+"{$project: {_id:0, "hobbies":1}}, {$unwind : "$hobbies"}, {$limit:1}"
+ */
 
 //static int verbose_flag;
 TAB_HANDLE make_table_definition(char *js){
