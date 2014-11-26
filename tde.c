@@ -10,19 +10,17 @@
 "{$project: {_id:0, "hobbies":1}}, {$unwind : "$hobbies"}, {$limit:1}"
  */
 
-//static int verbose_flag;
-TAB_HANDLE make_table_definition(char *js){
-
-    TAB_HANDLE hExtract = NULL;
+/*
+ * Get keys and values and store them in string arrays
+ */
+void 
+parse_keys_values(char **column_names, char **column_values, 
+                  char *js, 
+                  jsmntok_t *tokens){
+    
     typedef enum { START, KEY, PRINT, SKIP, STOP } parse_state;
     parse_state state = START;
-    jsmntok_t *tokens = json_tokenise(js);
-    printf("js: %s\n", js);
-    size_t object_tokens = tokens[0].size;
-    char **column_names = malloc(object_tokens / 2 * sizeof(char*));
-    char **column_values = malloc(object_tokens / 2 * sizeof(char*));
-    printf("size of : %lu\n", object_tokens/2);
-    object_tokens = 0;
+    size_t object_tokens = 0;
     for (size_t i = 0, j = 1, cn = 0, cv = 0 ; j > 0; i++, j--)
     {
         jsmntok_t *t = &tokens[i];
@@ -103,6 +101,26 @@ TAB_HANDLE make_table_definition(char *js){
                 log_die("Invalid state %u", state);
         }
     }
+
+
+}
+//static int verbose_flag;
+TAB_HANDLE 
+make_table_definition(char *js){
+
+    TAB_HANDLE hExtract = NULL;
+    //typedef enum { START, KEY, PRINT, SKIP, STOP } parse_state;
+    //parse_state state = START;
+    jsmntok_t *tokens = json_tokenise(js);
+    printf("js: %s\n", js);
+    char **column_names = malloc( tokens[0].size / 2 * sizeof(char*));
+    char **column_values = malloc(tokens[0].size / 2 * sizeof(char*));
+    printf("size of : %d\n", tokens[0].size);
+    
+    parse_keys_values(column_names, column_values, js, tokens);
+    printf("%s\n", column_names[0]);
+    printf("%s\n", column_names[1]);
+
 
     return hExtract;
 
