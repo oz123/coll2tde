@@ -123,16 +123,21 @@ int string_to_type(char *str){
     struct tm tm;
     memset(&tm, 0, sizeof(struct tm));
     char *rv = NULL;
-    rv = strptime(str, FORMAT_DATETIME, &tm);
-    /* if rv is not NULL then it is something else or '\0' 
-     * Which means it succeeded in parsing the time */
-    if (rv == NULL) {
+    char *DATETIME_FORMAT = getenv("DATETIME_FORMAT");
+    char *DATE_FORMAT = getenv("DATE_FORMAT");
+    if (DATETIME_FORMAT == NULL)
+        DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S";
+    if (DATE_FORMAT == NULL)
+        DATE_FORMAT = "%Y-%m-%d";
+
+    rv = strptime(str, DATETIME_FORMAT, &tm);
+    /* if rv is NULL then  
+     * it failed in parsing the time */
+    if (rv != NULL) {
         return TAB_TYPE_DateTime;
     }
-    rv = strptime(str, FORMAT_DATE, &tm);
-    /* if rv is not NULL then it is something else or '\0' 
-     * Which means it succeeded in parsing the time */
-    if (rv == NULL) {
+    rv = strptime(str, getenv("DATE_FORMAT"), &tm);
+    if (rv != NULL) {
         return TAB_TYPE_Date;
     }
     return -1;
