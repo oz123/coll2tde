@@ -24,7 +24,7 @@ parse_keys_values(char **column_names, char **column_values,
                   char *js, 
                   jsmntok_t *tokens){
     
-    typedef enum { START, KEY, PRINT, SKIP, STOP } parse_state;
+    typedef enum { START, KEY, VALUE, SKIP, STOP } parse_state;
     parse_state state = START;
     size_t object_tokens = 0;
     char *str = NULL;
@@ -59,21 +59,21 @@ parse_keys_values(char **column_names, char **column_values,
 
                 if (t->type != JSMN_STRING)
                     log_die("Invalid response: object keys must be strings.");
-
-                state = SKIP;
-                char *str = NULL;
+                    state = SKIP;
+                
                 if (i % 2) {
                     str = json_token_tostr(js, t);
                     column_names[cn] = str;
                     printf("KEY %s\n", column_names[cn]);
                     cn++;
-                    state = PRINT;
+                    state = VALUE;
                 }
                 break;
 
             case SKIP:
+                printf("Got to SKIP\n");
                 if (t->type != JSMN_STRING && t->type != JSMN_PRIMITIVE)
-                    log_die("Invalid response: object values must be strings or primitives.");
+                    log_die("SKIP, Invalid response: object values must be strings or primitives.");
 
                 object_tokens--;
                 state = KEY;
@@ -83,12 +83,12 @@ parse_keys_values(char **column_names, char **column_values,
 
                 break;
 
-            case PRINT:
+            case VALUE:
                 /* date values are given like this { "$date" : 1412200800000 }
                  * hence, we need to have special handling here ...
                  * */
-                if (t->type != JSMN_STRING && t->type != JSMN_PRIMITIVE)
-                    log_die("Invalid response: object values must be strings or primitives.");
+                //if (t->type != JSMN_STRING && t->type != JSMN_PRIMITIVE)
+                //    log_die("PRINT, Invalid response: object values must be strings or primitives.");
 
                 str = json_token_tostr(js, t);
                 column_values[cv] = str;
@@ -103,7 +103,8 @@ parse_keys_values(char **column_names, char **column_values,
                 break;
 
             case STOP:
-                // Just consume the tokens
+                // Just consume the tokens 
+                printf("Stop parsing ...\n");
                 break;
 
             default:
