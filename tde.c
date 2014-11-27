@@ -1,9 +1,15 @@
+#define _XOPEN_SOURCE
 #include <stdlib.h> 
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include "DataExtract.h"
 #include "tde.h"
+
+/* TODO: we need to replace this by reading a variable from ENV*/
+#define FORMAT_DATETIME "%Y-%m-%d %H:%M:%S"
+#define FORMAT_DATE     "%Y-%m-%d"
 
 /* 
  * Should be able to query like this ...
@@ -21,6 +27,7 @@ parse_keys_values(char **column_names, char **column_values,
     typedef enum { START, KEY, PRINT, SKIP, STOP } parse_state;
     parse_state state = START;
     size_t object_tokens = 0;
+    char *str = NULL;
     for (size_t i = 0, j = 1, cn = 0, cv = 0 ; j > 0; i++, j--)
     {
         jsmntok_t *t = &tokens[i];
@@ -77,11 +84,13 @@ parse_keys_values(char **column_names, char **column_values,
                 break;
 
             case PRINT:
+                /* date values are given like this { "$date" : 1412200800000 }
+                 * hence, we need to have special handling here ...
+                 * */
                 if (t->type != JSMN_STRING && t->type != JSMN_PRIMITIVE)
                     log_die("Invalid response: object values must be strings or primitives.");
 
                 str = json_token_tostr(js, t);
-                //if (! (i % 2))
                 column_values[cv] = str;
                 printf("%zu VALUE %s\n", i, column_values[cv]);
                 cv++;
@@ -101,8 +110,31 @@ parse_keys_values(char **column_names, char **column_values,
                 log_die("Invalid state %u", state);
         }
     }
+}
 
 
+/*
+ * Detect type from string 
+ */
+
+int string_to_type(char *str){
+   
+    struct tm tm;
+    memset(&tm, 0, sizeof(struct tm));
+    char *rv = NULL;
+    rv = strptime(str, FORMAT_DATETIME, &tm);
+    /* if rv is not NULL then it is something else or '\0' 
+     * Which means it succeeded in parsing the time */
+    if (rv == NULL) {
+        return TAB_TYPE_DateTime;
+    }
+    rv = strptime(str, FORMAT_DATE, &tm);
+    /* if rv is not NULL then it is something else or '\0' 
+     * Which means it succeeded in parsing the time */
+    if (rv == NULL) {
+        return TAB_TYPE_Date;
+    }
+    return -1;
 }
 //static int verbose_flag;
 TAB_HANDLE 
@@ -115,11 +147,15 @@ make_table_definition(char *js){
     printf("js: %s\n", js);
     char **column_names = malloc( tokens[0].size / 2 * sizeof(char*));
     char **column_values = malloc(tokens[0].size / 2 * sizeof(char*));
-    printf("size of : %d\n", tokens[0].size);
+    printf("size of : %d\n", tokens[0].size / 2 );
     
     parse_keys_values(column_names, column_values, js, tokens);
-    printf("%s\n", column_names[0]);
-    printf("%s\n", column_names[1]);
+    printf("Done parsing ...\n");
+    for  (int i = 0 ; i < tokens[0].size / 2; i++){
+        printf("KEY %s\n", column_names[i]);
+        printf("VALUE %s\n", column_values[i]);
+    
+    }
 
 
     return hExtract;
