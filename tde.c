@@ -4,10 +4,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <regex.h>
 #include "DataExtract.h"
 #include "tde.h"
 
-/* TODO: we need to replace this by reading a variable from ENV*/
+
+
 #define FORMAT_DATETIME "%Y-%m-%d %H:%M:%S"
 #define FORMAT_DATE     "%Y-%m-%d"
 
@@ -15,6 +17,35 @@
  * Should be able to query like this ...
 "{$project: {_id:0, "hobbies":1}}, {$unwind : "$hobbies"}, {$limit:1}"
  */
+
+/* check if tocken is a date object */
+int check_date(char *js, jsmntok_t *t){
+
+    regex_t regex;
+    int reti;
+    char msgbuf[100];
+    char *buff;
+    buff = json_token_tostr(js, t);
+    /* Compile regular expression */
+    reti = regcomp(&regex, "{ \"$date\" : [[:digit:]]\\{13\\} }", 0);
+    /* Execute regular expression */
+    reti = regexec(&regex, buff, 0, NULL, 0);
+    if( !reti ){
+        regfree(&regex);
+        return 0;
+        }
+    else if( reti == REG_NOMATCH ){
+        regfree(&regex);
+        return 1;
+    } else {
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        /* Free compiled regular expression if you want to use the regex_t again */
+        regfree(&regex);
+        exit(1);
+    }
+}
+
 
 /*
  * Get keys and values and store them in string arrays
@@ -24,6 +55,7 @@ parse_keys_values(char **column_names, char **column_values,
                   char *js, 
                   jsmntok_t *tokens){
     
+    int rv = -999;
     typedef enum { START, KEY, VALUE, SKIP, STOP } parse_state;
     parse_state state = START;
     size_t object_tokens = 0;
@@ -89,7 +121,11 @@ parse_keys_values(char **column_names, char **column_values,
                  * */
                 //if (t->type != JSMN_STRING && t->type != JSMN_PRIMITIVE)
                 //    log_die("PRINT, Invalid response: object values must be strings or primitives.");
-
+                if (t->type == JSMN_OBJECT){
+                    rv = check_date(js, t);
+                    if (! rv )
+                        printf("Found date !\n");
+                }
                 str = json_token_tostr(js, t);
                 column_values[cv] = str;
                 printf("%zu VALUE %s\n", i, column_values[cv]);
