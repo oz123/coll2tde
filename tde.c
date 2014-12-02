@@ -48,6 +48,19 @@ int check_date(char *js, jsmntok_t *t){
 
 
 /*
+ * convert the unix epoch string to GMT 
+ * */
+struct tm* convert_epoch_to_gmt(char * epoch){
+    struct tm *time;
+    char buf[255];
+    time_t c;
+    c = strtoul("1412200800", NULL, 0);
+    time = localtime(&c);
+    return time;
+}
+
+
+/*
  * Get keys and values and store them in string arrays
  */
 void 

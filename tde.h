@@ -20,3 +20,4 @@ void InsertData( TAB_HANDLE hTable );
 void parse_keys_values(char **column_names, char **column_values, char *js, 
                        jsmntok_t *tokens);
 
+struct tm* convert_epoch_to_gmt(char * epoch){
