@@ -53,7 +53,8 @@ int check_date(char *js, jsmntok_t *t){
 struct tm* convert_epoch_to_gmt(char * epoch){
     struct tm *time;
     time_t c;
-    c = strtoul("1412200800", NULL, 0);
+    // todo, implement check that len(epoch) == 14
+    c = strtoul(epoch, NULL, 0);
     time = localtime(&c);
     return time;
 }
@@ -211,7 +212,7 @@ make_table_definition(char *js){
     //typedef enum { START, KEY, PRINT, SKIP, STOP } parse_state;
     //parse_state state = START;
     jsmntok_t *tokens = json_tokenise(js);
-    //printf("js: %s\n", js);
+    printf("js: %s\n", js);
     char **column_names = malloc( tokens[0].size / 2 * sizeof(char*));
     char **column_values = malloc(tokens[0].size / 2 * sizeof(char*));
     //printf("size of : %d\n", tokens[0].size / 2 );
