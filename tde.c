@@ -68,7 +68,7 @@ parse_keys_values(char **column_names, char **column_values,
                   jsmntok_t *tokens){
     
     int rv = -999;
-    typedef enum { START, KEY, VALUE, SKIP, STOP } parse_state;
+    typedef enum { START, KEY, VALUE, SKIP, STOP, INCR } parse_state;
     parse_state state = START;
     size_t object_tokens = 0;
     char *str = NULL;
@@ -120,7 +120,7 @@ parse_keys_values(char **column_names, char **column_values,
                     log_die("SKIP, Invalid response: object values must be strings or primitives.");
 
                 object_tokens--;
-                state = KEY;
+                state = INCR;
 
                 if (object_tokens == 0)
                     state = STOP;
@@ -137,17 +137,22 @@ parse_keys_values(char **column_names, char **column_values,
                     rv = check_date(js, t);
                     if (! rv )
                         printf("Found date !\n");
+                        column_values[cv] = "DATE";
+                    state = SKIP;
+                    break;
                 }
+                
                 str = json_token_tostr(js, t);
                 column_values[cv] = str;
                 printf("%zu VALUE %s\n", i, column_values[cv]);
+                state = INCR;
+            
+            case INCR:
                 cv++;
                 object_tokens--;
                 state = KEY;
-
                 if (object_tokens == 0)
                     state = STOP;
-
                 break;
 
             case STOP:
