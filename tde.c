@@ -52,7 +52,6 @@ int check_date(char *js, jsmntok_t *t){
  * */
 struct tm* convert_epoch_to_gmt(char * epoch){
     struct tm *time;
-    char buf[255];
     time_t c;
     c = strtoul("1412200800", NULL, 0);
     time = localtime(&c);
