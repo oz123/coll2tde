@@ -16,8 +16,8 @@
 //static int verbose_flag;
 
 void print_usage() {
-    printf("Usage: coll2tde [v] -h HOST -d DATABASE -c COLLECTION -s "
-           "COLUMNS -o TDEFILE\n");
+    printf("Usage: coll2tde -h HOST -d DATABASE -c COLLECTION [-s "
+           "COLUMNS] -o TDEFILE\n");
 }
 
 

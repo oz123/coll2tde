@@ -89,7 +89,7 @@ parse_keys_values(char **column_names, char **column_values,
 
                 state = KEY;
                 object_tokens = t->size;
-                printf("Object_tokens: %zu\n", object_tokens);
+                //printf("Object_tokens: %zu\n", object_tokens);
                 if (object_tokens == 0)
                     state = STOP;
 
@@ -108,14 +108,12 @@ parse_keys_values(char **column_names, char **column_values,
                 if (i % 2) {
                     str = json_token_tostr(js, t);
                     column_names[cn] = str;
-                    printf("KEY %s\n", column_names[cn]);
                     cn++;
                     state = VALUE;
                 }
                 break;
 
             case SKIP:
-                printf("Got to SKIP\n");
                 if (t->type != JSMN_STRING && t->type != JSMN_PRIMITIVE)
                     log_die("SKIP, Invalid response: object values must be strings or primitives.");
 
@@ -136,15 +134,26 @@ parse_keys_values(char **column_names, char **column_values,
                 if (t->type == JSMN_OBJECT){
                     rv = check_date(js, t);
                     if (! rv )
-                        printf("Found date !\n");
                         column_values[cv] = "DATE";
                     state = SKIP;
                     break;
                 }
                 
-                str = json_token_tostr(js, t);
-                column_values[cv] = str;
-                printf("%zu VALUE %s\n", i, column_values[cv]);
+                if (t->type == JSMN_PRIMITIVE){
+                    str = json_token_tostr(js, t);
+                    column_values[cv] = "PRIMITIVE";
+                }
+                
+                if (t->type == JSMN_STRING){
+                    str = json_token_tostr(js, t);
+                    column_values[cv] = "STRING";
+                }
+                
+                //else {
+                //   str = json_token_tostr(js, t);
+                //    column_values[cv] = str;
+                //    printf("%zu VALUE %s\n", i, column_values[cv]);
+                //}
                 state = INCR;
             
             case INCR:
@@ -157,7 +166,6 @@ parse_keys_values(char **column_names, char **column_values,
 
             case STOP:
                 // Just consume the tokens 
-                printf("Stop parsing ...\n");
                 break;
 
             default:
@@ -203,15 +211,14 @@ make_table_definition(char *js){
     //typedef enum { START, KEY, PRINT, SKIP, STOP } parse_state;
     //parse_state state = START;
     jsmntok_t *tokens = json_tokenise(js);
-    printf("js: %s\n", js);
+    //printf("js: %s\n", js);
     char **column_names = malloc( tokens[0].size / 2 * sizeof(char*));
     char **column_values = malloc(tokens[0].size / 2 * sizeof(char*));
-    printf("size of : %d\n", tokens[0].size / 2 );
+    //printf("size of : %d\n", tokens[0].size / 2 );
     
     parse_keys_values(column_names, column_values, js, tokens);
-    printf("Done parsing ...\n");
     for  (int i = 0 ; i < tokens[0].size / 2; i++){
-        printf("KEY %s\n", column_names[i]);
+        printf("KEY %s ", column_names[i]);
         printf("VALUE %s\n", column_values[i]);
     
     }
