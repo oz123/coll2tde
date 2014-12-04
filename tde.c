@@ -65,6 +65,7 @@ struct tm* convert_epoch_to_gmt(char * epoch){
  */
 void 
 parse_keys_values(char **column_names, char **column_values, 
+                  TAB_TYPE *column_types,
                   char *js, 
                   jsmntok_t *tokens){
     
@@ -90,7 +91,6 @@ parse_keys_values(char **column_names, char **column_values,
 
                 state = KEY;
                 object_tokens = t->size;
-                //printf("Object_tokens: %zu\n", object_tokens);
                 if (object_tokens == 0)
                     state = STOP;
 
@@ -127,15 +127,12 @@ parse_keys_values(char **column_names, char **column_values,
                 break;
 
             case VALUE:
-                /* date values are given like this { "$date" : 1412200800000 }
-                 * hence, we need to have special handling here ...
-                 * */
-                //if (t->type != JSMN_STRING && t->type != JSMN_PRIMITIVE)
-                //    log_die("PRINT, Invalid response: object values must be strings or primitives.");
+                
                 if (t->type == JSMN_OBJECT){
                     rv = check_date(js, t);
                     if (! rv )
                         column_values[cv] = "DATE";
+                        column_types[cv] = TAB_TYPE_DateTime;
                     state = SKIP;
                     break;
                 }
@@ -143,18 +140,15 @@ parse_keys_values(char **column_names, char **column_values,
                 if (t->type == JSMN_PRIMITIVE){
                     str = json_token_tostr(js, t);
                     column_values[cv] = "PRIMITIVE";
+                    column_types[cv] = TAB_TYPE_Double;
                 }
                 
                 if (t->type == JSMN_STRING){
                     str = json_token_tostr(js, t);
                     column_values[cv] = "STRING";
+                    column_types[cv] = TAB_TYPE_UnicodeString;
                 }
                 
-                //else {
-                //   str = json_token_tostr(js, t);
-                //    column_values[cv] = str;
-                //    printf("%zu VALUE %s\n", i, column_values[cv]);
-                //}
                 state = INCR;
             
             case INCR:
@@ -215,15 +209,14 @@ make_table_definition(char *js){
     printf("js: %s\n", js);
     char **column_names = malloc( tokens[0].size / 2 * sizeof(char*));
     char **column_values = malloc(tokens[0].size / 2 * sizeof(char*));
-    //printf("size of : %d\n", tokens[0].size / 2 );
-    
-    parse_keys_values(column_names, column_values, js, tokens);
+    TAB_TYPE *column_types = malloc(tokens[0].size /2 * sizeof(TAB_TYPE));
+    parse_keys_values(column_names, column_values, column_types, js, tokens);
     for  (int i = 0 ; i < tokens[0].size / 2; i++){
         printf("KEY %s ", column_names[i]);
-        printf("VALUE %s\n", column_values[i]);
+        printf("TAB_TYPE %d ", column_types[i]);
+        printf("TYPE %s\n", column_values[i]);
     
     }
-
 
     return hExtract;
 
