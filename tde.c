@@ -19,6 +19,44 @@
 "{$project: {_id:0, "hobbies":1}}, {$unwind : "$hobbies"}, {$limit:1}"
  */
 
+/* check if a string is an integer or a float */
+int check_number(char *str, int * ival, double *fval){
+    
+    typedef enum { ERR, INT, DOUBLE } parse_num;
+    
+    char* to_convert = str;
+    char* p = NULL;
+    errno = 0;
+    int val = strtol(str, &p, 0);
+
+    if (errno != 0)
+        return ERR;// conversion failed (EINVAL, ERANGE)
+
+    if (to_convert == p){
+        // conversion to int failed (no characters consumed)
+        double val2 = strtod(p, &p);
+        if (*p){
+           return ERR;
+           }
+        *fval = val2;
+        return DOUBLE;
+        }
+
+    if (*p != 0){
+        // conversion to int failed (trailing data)
+        double val2 = strtod(str, &p);
+        if (*p){
+           return ERR;
+           }
+        *fval = val2;
+        return DOUBLE; 
+        }
+    
+    *ival = val;
+    return INT;
+}
+
+
 /* check if tocken is a date object */
 int check_date(char *js, jsmntok_t *t){
 
@@ -144,7 +182,18 @@ parse_keys_values(wchar_t **column_names, char **column_values,
                 if (t->type == JSMN_PRIMITIVE){
                     str = json_token_tostr(js, t);
                     column_values[cv] = "PRIMITIVE";
-                    column_types[cv] = TAB_TYPE_Double;
+                    int ival = 0;
+                    double dval = 0.0;
+                    int rv = check_number(str, &ival, &dval);
+                    if (rv == 1){
+                        printf("The integer is %d \n", ival);
+                        column_types[cv] = TAB_TYPE_Integer;
+                    } else if (rv == 2) {
+                        printf("The double is %f \n", dval);
+                        column_types[cv] = TAB_TYPE_Double;
+                    } else {
+                        column_types[cv] = TAB_TYPE_Double;
+                    }  
                 }
                 
                 if (t->type == JSMN_STRING){
