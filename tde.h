@@ -25,4 +25,4 @@ void parse_keys_values(wchar_t **column_names, char **column_values,
 
 struct tm* convert_epoch_to_gmt(char * epoch);
 
-int check_number(char *str, int * ival, double *fval)
+int check_number(char *str, int * ival, double *fval);

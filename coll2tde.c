@@ -3,12 +3,12 @@
 #include <getopt.h>
 #include <string.h>
 #include <unistd.h>
+#include <wchar.h>
 #include "DataExtract.h"
 #include "jsmn/jsmn.h"
 #include "json.h"
 #include "mongo.h"
 #include "tde.h"
-#include <wchar.h>
 
 #define JSON_TOKENS 256
 #define COLS 999 
@@ -95,15 +95,22 @@ main (int   argc, char *argv[]){
     ToTableauString( L"Extract", sExtract );
     char *jsstr = NULL;
     cursor = get_one(host, database, collection_name, &collection_p, &client_p);
-    while (mongoc_cursor_next (cursor, &doc)) {
-        jsstr = bson_as_json (doc, NULL);
-    }
+    mongoc_cursor_t *cursor_copy;
+    mongoc_cursor_next (cursor, &doc);
+    jsstr = bson_as_json (doc, NULL);
     hExtract = make_table_definition(jsstr);
     TryOp( TabExtractCreate( &hExtract, sOrderTde ) );
-    TryOp( TabExtractClose( hExtract ) );
 
-
+    /* revert cursor to begining of query */
+    cursor_copy = mongoc_cursor_clone (cursor);
+    
     /* do all the fun inserting data here ...*/
+    while (mongoc_cursor_next (cursor_copy, &doc)) {
+        jsstr = bson_as_json (doc, NULL);
+        printf("Insert here...\n");
+    }
+    
+    TryOp( TabExtractClose( hExtract ) );
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection_p);
     mongoc_client_destroy(client_p);
