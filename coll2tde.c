@@ -96,9 +96,9 @@ main (int   argc, char *argv[]){
     wchar_t *fname_w = calloc(strlen(filename) + 1, sizeof(wchar_t));
     mbstowcs(fname_w, filename, strlen(filename)+1);
     printf("Creating tde file: %ls\n", fname_w);
-    TableauWChar *sOrderTde = calloc(strlen(filename) + 1, sizeof(TableauWChar));
+    TableauWChar *sfname = calloc(strlen(filename) + 1, sizeof(TableauWChar));
     TableauWChar sExtract[8];
-    ToTableauString(fname_w, sOrderTde);
+    ToTableauString(fname_w, sfname);
     ToTableauString( L"Extract", sExtract );
     char *jsstr = NULL;
     /* TODO: add option to parse aggregation, and get this cursor 
@@ -110,7 +110,7 @@ main (int   argc, char *argv[]){
     mongoc_cursor_next (cursor, &doc);
     jsstr = bson_as_json (doc, NULL);
     hExtract = make_table_definition(jsstr);
-    TryOp( TabExtractCreate( &hExtract, sOrderTde ) );
+    TryOp(TabExtractCreate(&hExtract, sfname));
 
     mongoc_cursor_destroy(cursor);
     /* revert cursor to begining of query */
