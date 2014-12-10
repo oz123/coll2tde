@@ -98,12 +98,118 @@ struct tm* convert_epoch_to_gmt(char * epoch){
     return time;
 }
 
-
 /*
- * Get keys and values and store them in string arrays
+ * Get valeus and store them in string array
  */
 void 
-parse_keys_values(wchar_t **column_names, char **column_values, 
+extract_values(char **column_values, 
+               char *js, 
+               jsmntok_t *tokens){
+    
+    int rv = -999;
+    typedef enum { START, KEY, VALUE, SKIP, STOP, INCR } parse_state;
+    parse_state state = START;
+    size_t object_tokens = 0;
+    char *str = NULL;
+    for (size_t i = 0, j = 1, cn = 0, cv = 0 ; j > 0; i++, j--)
+    {
+        jsmntok_t *t = &tokens[i];
+
+        // Should never reach uninitialized tokens
+        log_assert(t->start != -1 && t->end != -1);
+
+        if (t->type == JSMN_ARRAY || t->type == JSMN_OBJECT)
+            j += t->size;
+        switch (state)
+        {
+            case START:
+                if (t->type != JSMN_OBJECT)
+                    log_die("Invalid response: root element must be an object.");
+
+                state = KEY;
+                object_tokens = t->size;
+                if (object_tokens == 0)
+                    state = STOP;
+
+                if (object_tokens % 2 != 0)
+                    log_die("Invalid response: object must have even number of children.");
+
+                break;
+
+            case KEY:
+                object_tokens--;
+
+                if (t->type != JSMN_STRING)
+                    log_die("Invalid response: object keys must be strings.");
+                    state = SKIP;
+                
+                if (i % 2) {
+                    str = json_token_tostr(js, t);
+
+                    wchar_t *str_w = calloc(strlen(str) + 1, sizeof(wchar_t));
+                    mbstowcs(str_w, str, strlen(str)+1);
+                    cn++;
+                    state = VALUE;
+                }
+                break;
+
+            case SKIP:
+                if (t->type != JSMN_STRING && t->type != JSMN_PRIMITIVE)
+                    log_die("SKIP, Invalid response: object values must be strings or primitives.");
+
+                object_tokens--;
+                state = INCR;
+
+                if (object_tokens == 0)
+                    state = STOP;
+
+                break;
+
+            case VALUE:
+                if (t->type == JSMN_OBJECT){
+                    rv = check_date(js, t);
+                    if (! rv )
+                        str = json_token_tostr(js, t);
+                        column_values[cv] = str;
+                    state = SKIP;
+                    break;
+                }
+                
+                if (t->type == JSMN_PRIMITIVE){
+                    str = json_token_tostr(js, t);
+                    column_values[cv] = str;
+                }
+                
+                if (t->type == JSMN_STRING){
+                    str = json_token_tostr(js, t);
+                    column_values[cv] = str;
+                }
+                
+                state = INCR;
+            
+            case INCR:
+                cv++;
+                object_tokens--;
+                state = KEY;
+                if (object_tokens == 0)
+                    state = STOP;
+                break;
+
+            case STOP:
+                // Just consume the tokens 
+                break;
+
+            default:
+                log_die("Invalid state %u", state);
+        }
+    }
+}
+
+/*
+ * Get keys and types and store them in string arrays
+ */
+void 
+parse_keys_values(wchar_t **column_names,  
                   TAB_TYPE *column_types,
                   char *js, 
                   jsmntok_t *tokens){
@@ -173,7 +279,6 @@ parse_keys_values(wchar_t **column_names, char **column_values,
                 if (t->type == JSMN_OBJECT){
                     rv = check_date(js, t);
                     if (! rv )
-                        column_values[cv] = "DATE";
                         column_types[cv] = TAB_TYPE_DateTime;
                     state = SKIP;
                     break;
@@ -181,15 +286,12 @@ parse_keys_values(wchar_t **column_names, char **column_values,
                 
                 if (t->type == JSMN_PRIMITIVE){
                     str = json_token_tostr(js, t);
-                    column_values[cv] = "PRIMITIVE";
                     int ival = 0;
                     double dval = 0.0;
                     int rv = check_number(str, &ival, &dval);
                     if (rv == 1){
-                        printf("The integer is %d \n", ival);
                         column_types[cv] = TAB_TYPE_Integer;
                     } else if (rv == 2) {
-                        printf("The double is %f \n", dval);
                         column_types[cv] = TAB_TYPE_Double;
                     } else {
                         column_types[cv] = TAB_TYPE_Double;
@@ -198,7 +300,6 @@ parse_keys_values(wchar_t **column_names, char **column_values,
                 
                 if (t->type == JSMN_STRING){
                     str = json_token_tostr(js, t);
-                    column_values[cv] = "STRING";
                     column_types[cv] = TAB_TYPE_UnicodeString;
                 }
                 
@@ -260,15 +361,8 @@ make_table_definition(char *js){
     jsmntok_t *tokens = json_tokenise(js);
     printf("js: %s\n", js);
     wchar_t **column_names = malloc( tokens[0].size / 2 * sizeof(wchar_t*));
-    char **column_values = malloc(tokens[0].size / 2 * sizeof(char*));
     TAB_TYPE *column_types = malloc(tokens[0].size /2 * sizeof(TAB_TYPE));
-    parse_keys_values(column_names, column_values, column_types, js, tokens);
-    for  (int i = 0 ; i < tokens[0].size / 2; i++){
-        printf("KEY %ls ", column_names[i]);
-        printf("TAB_TYPE %d ", column_types[i]);
-        printf("TYPE %s\n", column_values[i]);
-    
-    }
+    parse_keys_values(column_names, column_types, js, tokens);
     
     TAB_HANDLE hTableDef;
     TryOp( TabTableDefinitionCreate( &hTableDef ) );

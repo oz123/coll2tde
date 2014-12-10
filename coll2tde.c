@@ -12,12 +12,13 @@
 
 #define JSON_TOKENS 256
 #define COLS 999 
+#define AGGR 1001 
 
 //static int verbose_flag;
 
 void print_usage() {
     printf("Usage: coll2tde -h HOST -d DATABASE -c COLLECTION [-s "
-           "COLUMNS] -o TDEFILE\n");
+           "COLUMNS] [-a AGGREGATION] -o TDEFILE\n");
 }
 
 
@@ -29,12 +30,14 @@ main (int   argc, char *argv[]){
     char *collection_name = NULL;
     char *filename = NULL;
     char *columns = NULL;
+    char *aggregation = NULL;
     
     static struct option long_options[] = {
         {"host",      required_argument,       0,  'h' },
         {"database", no_argument,       0,  'd' },
         {"collection",    required_argument, 0,  'c' },
         {"columns",   required_argument, 0,  COLS },
+        {"aggregation",   required_argument, 0,  AGGR },
         {"filename",   required_argument, 0,  'f' },
         {0,           0,                 0,  0   }
     };
@@ -52,6 +55,8 @@ main (int   argc, char *argv[]){
              case 'f' : filename = optarg;
                  break;
              case COLS : columns = optarg;
+                 break;
+             case AGGR : aggregation = optarg;
                  break;
              default: print_usage(); 
                  exit(EXIT_FAILURE);
@@ -76,7 +81,9 @@ main (int   argc, char *argv[]){
     if ( columns != NULL ) {
         printf("columns: %s\n", columns); 
     }
-   
+    if ( aggregation != NULL ) {
+        printf("aggregation: %s\n", aggregation);
+    }
 
     printf("filename: %s\n", filename);
     
@@ -94,20 +101,31 @@ main (int   argc, char *argv[]){
     ToTableauString(fname_w, sOrderTde);
     ToTableauString( L"Extract", sExtract );
     char *jsstr = NULL;
+    /* TODO: add option to parse aggregation, and get this cursor 
+     * aggregation should be given as json and converted to BSON with 
+     * bson_new_from_json
+     * mongoc_collection_aggregate should than be used to get a cursor
+     * */
     cursor = get_one(host, database, collection_name, &collection_p, &client_p);
-    mongoc_cursor_t *cursor_copy;
     mongoc_cursor_next (cursor, &doc);
     jsstr = bson_as_json (doc, NULL);
     hExtract = make_table_definition(jsstr);
     TryOp( TabExtractCreate( &hExtract, sOrderTde ) );
 
+    mongoc_cursor_destroy(cursor);
     /* revert cursor to begining of query */
-    cursor_copy = mongoc_cursor_clone (cursor);
-    
+    //mongoc_cursor_t *cursor_copy;
+    //cursor_copy = mongoc_cursor_clone (cursor);
+    cursor = get_one(host, database, collection_name, &collection_p, &client_p);
     /* do all the fun inserting data here ...*/
-    while (mongoc_cursor_next (cursor_copy, &doc)) {
+    while (mongoc_cursor_next (cursor, &doc)) {
         jsstr = bson_as_json (doc, NULL);
+        jsmntok_t *tokens = json_tokenise(jsstr);
+        char **column_values = malloc(tokens[0].size / 2 * sizeof(char*));
         printf("Insert here...\n");
+        extract_values(column_values, jsstr, tokens);
+        for (int i=0 ; i < tokens[0].size / 2 ; i++)
+            printf("value: %s\n", column_values[i]);
     }
     
     TryOp( TabExtractClose( hExtract ) );
