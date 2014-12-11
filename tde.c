@@ -357,7 +357,6 @@ int string_to_type(char *str){
 TAB_HANDLE 
 make_table_definition(char *js){
 
-    TAB_HANDLE hExtract = NULL;
     jsmntok_t *tokens = json_tokenise(js);
     printf("js: %s\n", js);
     wchar_t **column_names = malloc( tokens[0].size / 2 * sizeof(wchar_t*));
@@ -375,7 +374,7 @@ make_table_definition(char *js){
         printf("Successfully added column %ls with type %d\n", column_names[i], 
                 column_types[i]);
     }
-    return hExtract;
+    return hTableDef;
 }
 
 /* Print a Table's schema to stderr */
