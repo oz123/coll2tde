@@ -109,7 +109,8 @@ main (int   argc, char *argv[]){
     cursor = get_one(host, database, collection_name, &collection_p, &client_p);
     mongoc_cursor_next (cursor, &doc);
     jsstr = bson_as_json (doc, NULL);
-    hExtract = make_table_definition(jsstr);
+    TAB_TYPE *column_types = NULL;
+    hExtract = make_table_definition(jsstr, &column_types);
     TryOp(TabExtractCreate(&hExtract, sfname));
 
     mongoc_cursor_destroy(cursor);
@@ -128,7 +129,7 @@ main (int   argc, char *argv[]){
             printf("value: %s\n", column_values[i]);
     }
     
-    TryOp( TabExtractClose( hExtract ) );
+    TryOp(TabExtractClose(hExtract));
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection_p);
     mongoc_client_destroy(client_p);

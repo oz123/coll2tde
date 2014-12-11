@@ -14,7 +14,7 @@
     fprintf(stderr, "Error: %ls\n", TabGetLastErrorMessage()); \
     exit( EXIT_FAILURE ); }
 
-TAB_HANDLE make_table_definition();
+TAB_HANDLE make_table_definition(char *js, TAB_TYPE *column_types);
 
 void PrintTableDefinition( TAB_HANDLE hTableDef );
 
