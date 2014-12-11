@@ -355,7 +355,7 @@ int string_to_type(char *str){
 
 /* Define the table's schema */
 TAB_HANDLE 
-make_table_definition(char *js){
+make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
 
     jsmntok_t *tokens = json_tokenise(js);
     printf("js: %s\n", js);
@@ -364,16 +364,20 @@ make_table_definition(char *js){
     parse_keys_values(column_names, column_types, js, tokens);
     
     TAB_HANDLE hTableDef;
-    TryOp( TabTableDefinitionCreate( &hTableDef ) );
-    TryOp( TabTableDefinitionSetDefaultCollation( hTableDef, TAB_COLLATION_en_US ) );
-    for (int i = 0; i < tokens[0].size / 2 ; i++){
-        
-        TableauWChar *colname = malloc(wcslen(column_names[i])+1);
-        ToTableauString(column_names[i], colname);
-        TryOp( TabTableDefinitionAddColumn(hTableDef, colname, column_types[i]));
-        printf("Successfully added column %ls with type %d\n", column_names[i], 
-                column_types[i]);
+    TryOp(TabTableDefinitionCreate(&hTableDef));
+    TryOp(TabTableDefinitionSetDefaultCollation(hTableDef, 
+                TAB_COLLATION_en_US));
+    for (; *ncol < tokens[0].size / 2 ; *ncol = *ncol + 1){
+        TableauWChar *colname = malloc(wcslen(column_names[*ncol])+1);
+        ToTableauString(column_names[*ncol], colname);
+        TryOp(TabTableDefinitionAddColumn(hTableDef, colname, 
+                    column_types[*ncol]));
+        printf("Successfully added column %ls with type %d\n", 
+                column_names[*ncol], 
+                column_types[*ncol]);
     }
+    /* populate values which are passed by reference*/
+    *column_types_p = column_types;
     return hTableDef;
 }
 

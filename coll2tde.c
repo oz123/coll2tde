@@ -110,9 +110,12 @@ main (int   argc, char *argv[]){
     mongoc_cursor_next (cursor, &doc);
     jsstr = bson_as_json (doc, NULL);
     TAB_TYPE *column_types = NULL;
-    hExtract = make_table_definition(jsstr, &column_types);
+    int ncol = 0;
+    hExtract = make_table_definition(jsstr, &column_types, &ncol);
     TryOp(TabExtractCreate(&hExtract, sfname));
-
+    printf("The length is %d\n", ncol);
+    for (int i=0; i< ncol; i++)
+        printf("Column %d is type %d\n", i, column_types[i]);
     mongoc_cursor_destroy(cursor);
     /* revert cursor to begining of query */
     //mongoc_cursor_t *cursor_copy;

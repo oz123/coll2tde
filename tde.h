@@ -14,7 +14,7 @@
     fprintf(stderr, "Error: %ls\n", TabGetLastErrorMessage()); \
     exit( EXIT_FAILURE ); }
 
-TAB_HANDLE make_table_definition(char *js, TAB_TYPE *column_types);
+TAB_HANDLE make_table_definition(char *js, TAB_TYPE **column_types, int *ncols);
 
 void PrintTableDefinition( TAB_HANDLE hTableDef );
 
@@ -30,5 +30,5 @@ int check_number(char *str, int * ival, double *fval);
 
 void extract_values(char **column_values, char *js, jsmntok_t *tokens);
 
-void insert_values(char **record_values, char**column_types, 
+void insert_values(char **record_values, TAB_TYPE **column_types, 
         TAB_HANDLE *hTable, TAB_HANDLE *hRow);
