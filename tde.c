@@ -401,6 +401,11 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
         
            case 7:  // TAB_TYPE_Integer
                 printf("Will insert integer %ls!\n", record_values[i]);
+                char *bs = (char*)malloc(wcslen(record_values[i]));
+                wcstombs(bs, record_values[i], strlen(bs));
+                char* p = NULL;
+                long val = strtol(bs, &p, 0);
+                TryOp(TabRowSetInteger(hRow, i, val));
                 break;
 
            case 13: // TAB_TYPE_DateTime
@@ -417,7 +422,9 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
 
            case 10: // TAB_TYPE_Double 
                 printf("Will insert double  %ls!\n", record_values[i]);
-                break;
+                wchar_t *stopwcs;
+                TryOp(TabRowSetDouble(hRow, i, 
+                                      wcstold(record_values[i], &stopwcs)));                   break;
            
            default:
                 printf("Will insert unicode %ls!\n", record_values[i]);
