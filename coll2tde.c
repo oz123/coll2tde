@@ -148,11 +148,9 @@ main (int   argc, char *argv[]){
     while (mongoc_cursor_next (cursor, &doc)) {
         jsstr = bson_as_json (doc, NULL);
         jsmntok_t *tokens = json_tokenise(jsstr);
-        char **column_values = malloc(tokens[0].size / 2 * sizeof(char*));
-        printf("Insert here...\n");
+        wchar_t **column_values = malloc(tokens[0].size / 2 * sizeof(wchar_t*));
         extract_values(column_values, jsstr, tokens, &ncol);
         for (int i=0 ; i < ncol ; i++)
-            printf("value: %s\n", column_values[i]);
             insert_values(column_values, column_types, hTableDef, ncol);
     }
     

@@ -19,6 +19,14 @@
 "{$project: {_id:0, "hobbies":1}}, {$unwind : "$hobbies"}, {$limit:1}"
  */
 
+wchar_t * char_to_wchar(char *str){
+
+    wchar_t *str_w = calloc(strlen(str) + 1, sizeof(wchar_t));
+    mbstowcs(str_w, str, strlen(str)+1);
+    return str_w;
+}
+
+
 /* check if a string is an integer or a float */
 int check_number(char *str, int * ival, double *fval){
     
@@ -102,7 +110,7 @@ struct tm* convert_epoch_to_gmt(char * epoch){
  * Get valeus and store them in string array
  */
 void 
-extract_values(char **column_values, 
+extract_values(wchar_t **column_values, 
                char *js, 
                jsmntok_t *tokens, 
                int *ncol){
@@ -146,10 +154,6 @@ extract_values(char **column_values,
                     state = SKIP;
                 
                 if (i % 2) {
-                    str = json_token_tostr(js, t);
-
-                    wchar_t *str_w = calloc(strlen(str) + 1, sizeof(wchar_t));
-                    mbstowcs(str_w, str, strlen(str)+1);
                     state = VALUE;
                 }
                 break;
@@ -171,19 +175,19 @@ extract_values(char **column_values,
                     rv = check_date(js, t);
                     if (! rv )
                         str = json_token_tostr(js, t);
-                        column_values[cv] = str;
+                        column_values[cv] = char_to_wchar(str);
                     state = SKIP;
                     break;
                 }
                 
                 if (t->type == JSMN_PRIMITIVE){
                     str = json_token_tostr(js, t);
-                    column_values[cv] = str;
+                    column_values[cv] = char_to_wchar(str);
                 }
                 
                 if (t->type == JSMN_STRING){
                     str = json_token_tostr(js, t);
-                    column_values[cv] = str;
+                    column_values[cv] = char_to_wchar(str);
                 }
                 
                 state = INCR;
@@ -256,10 +260,7 @@ parse_keys_values(wchar_t **column_names,
                 
                 if (i % 2) {
                     str = json_token_tostr(js, t);
-
-                    wchar_t *str_w = calloc(strlen(str) + 1, sizeof(wchar_t));
-                    mbstowcs(str_w, str, strlen(str)+1);
-                    column_names[cn] = str_w;
+                    column_names[cn] = char_to_wchar(str);
                     cn++;
                     state = VALUE;
                 }
@@ -386,29 +387,40 @@ make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
 }
 
 
-void insert_values(char **record_values, TAB_TYPE *column_types, 
+void insert_values(wchar_t **record_values, TAB_TYPE *column_types, 
         TAB_HANDLE *hTableDef, int rec_size){
     
     TAB_HANDLE hRow;
     TryOp(TabRowCreate(&hRow, hTableDef));
-    printf("rec_size %d\n", rec_size);
+    printf("Created new row ...\n");
     for (int i = 0; i < rec_size; i++) {
             
-        printf("i is %d\n", i);
         int coltype = column_types[i];
-        printf("t is %d\n", column_types[i]);
         switch (coltype)
         {
         
            case 7:  // TAB_TYPE_Integer
-                printf("Will insert integer %s!\n", record_values[i]);
+                printf("Will insert integer %ls!\n", record_values[i]);
                 break;
 
-            case 13: // TAB_TYPE_DateTime
-                printf("Will insert datetime %s!\n", record_values[i]);
+           case 13: // TAB_TYPE_DateTime
+                printf("Will insert datetime %ls!\n", record_values[i]);
                 break;
-            default:
-                printf("Will insert unicode %s!\n", record_values[i]);
+            
+           case 16: // TAB_TYPE_UnicodeString
+                printf("Will insert unicode %ls!\n", record_values[i]);
+                TableauWChar *value = malloc(wcslen(record_values[i])+1);
+                ToTableauString(record_values[i], value);
+                TryOp(TabRowSetString(hRow, i, value));
+                free(value);
+                break;
+
+           case 10: // TAB_TYPE_Double 
+                printf("Will insert double  %ls!\n", record_values[i]);
+                break;
+           
+           default:
+                printf("Will insert unicode %ls!\n", record_values[i]);
                 
         }
 
@@ -437,27 +449,6 @@ void get_columns(TAB_TYPE **column_types_p, TAB_HANDLE hTableDef, int *ncols){
     *ncols = numColumns;
 }
 
-/* Print a Table's schema to stderr */
-void PrintTableDefinition( TAB_HANDLE hTableDef )
-{
-    int i, numColumns, len;
-    TAB_TYPE type;
-    TableauString str;
-    wchar_t* wStr;
-
-    TryOp(TabTableDefinitionGetColumnCount(hTableDef, &numColumns));
-    for ( i = 0; i < numColumns; ++i ) {
-        TryOp( TabTableDefinitionGetColumnType( hTableDef, i, &type ) );
-        TryOp( TabTableDefinitionGetColumnName( hTableDef, i, &str ) );
-
-        len = TableauStringLength( str );
-        wStr = malloc( (len + 1) * sizeof(wchar_t) ); /* make room for the null */
-        FromTableauString( str, wStr );
-
-        fprintf(stderr, "Column %d: %ls (%#06x)\n", i, wStr, type);
-        free(wStr);
-    }
-}
 
 /* Insert a few rows of data. */
 void InsertData( TAB_HANDLE hTable )
