@@ -18,8 +18,8 @@ get_one(char *host, char *db, char *collection_name,
     *collection_p = mongoc_client_get_collection (*client_p, "test", "test");
     cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
                                     0, 0, 0, query, fields, NULL);
-    //bson_destroy(query);
-    //bson_destroy(fields);
+    bson_destroy(query);
+    bson_destroy(fields);
     return cursor;
 
 }
