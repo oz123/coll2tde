@@ -92,7 +92,8 @@ main (int   argc, char *argv[]){
     mongoc_cursor_t *cursor;
     const bson_t *doc;
     TAB_HANDLE hExtract;
-
+    TAB_HANDLE hTable;
+    TAB_HANDLE hTableDef;
     wchar_t *fname_w = calloc(strlen(filename) + 1, sizeof(wchar_t));
     mbstowcs(fname_w, filename, strlen(filename)+1);
     printf("Creating tde file: %ls\n", fname_w);
@@ -100,6 +101,7 @@ main (int   argc, char *argv[]){
     TableauWChar sExtract[8];
     ToTableauString(fname_w, sfname);
     ToTableauString( L"Extract", sExtract );
+    TryOp(TabExtractCreate(&hExtract, sfname));
     char *jsstr = NULL;
     /* TODO: add option to parse aggregation, and get this cursor 
      * aggregation should be given as json and converted to BSON with 
@@ -111,8 +113,27 @@ main (int   argc, char *argv[]){
     jsstr = bson_as_json (doc, NULL);
     TAB_TYPE *column_types = NULL;
     int ncol = 0;
-    hExtract = make_table_definition(jsstr, &column_types, &ncol);
-    TryOp(TabExtractCreate(&hExtract, sfname));
+    int bHasTable;
+    TryOp( TabExtractHasTable(hExtract, sExtract, &bHasTable ) );
+
+    if (!bHasTable) {
+        /* Table does not exist; create it. */
+        hTableDef = make_table_definition(jsstr, &column_types, &ncol);
+        
+        for (int i=0 ; i < ncol ; i++)
+            printf("type: %d\n", column_types[i]);
+        
+        TryOp(TabExtractAddTable(hExtract, sExtract, hTableDef, &hTable));
+        TryOp(TabTableDefinitionClose( hTableDef));
+    }
+    else {
+        /* Open an existing table to add more rows. */
+        TryOp(TabExtractOpenTable(hExtract, sExtract, &hTable));
+        // TODO: add column_types  here 
+    }
+
+    TryOp(TabTableGetTableDefinition(hTable, &hTableDef));
+    
     printf("The length is %d\n", ncol);
     for (int i=0; i< ncol; i++)
         printf("Column %d is type %d\n", i, column_types[i]);
@@ -127,9 +148,10 @@ main (int   argc, char *argv[]){
         jsmntok_t *tokens = json_tokenise(jsstr);
         char **column_values = malloc(tokens[0].size / 2 * sizeof(char*));
         printf("Insert here...\n");
-        extract_values(column_values, jsstr, tokens);
-        for (int i=0 ; i < tokens[0].size / 2 ; i++)
+        extract_values(column_values, jsstr, tokens, &ncol);
+        for (int i=0 ; i < ncol ; i++)
             printf("value: %s\n", column_values[i]);
+            insert_values(column_values, column_types, hTableDef, ncol);
     }
     
     TryOp(TabExtractClose(hExtract));

@@ -104,14 +104,16 @@ struct tm* convert_epoch_to_gmt(char * epoch){
 void 
 extract_values(char **column_values, 
                char *js, 
-               jsmntok_t *tokens){
+               jsmntok_t *tokens, 
+               int *ncol){
     
     int rv = -999;
     typedef enum { START, KEY, VALUE, SKIP, STOP, INCR } parse_state;
     parse_state state = START;
     size_t object_tokens = 0;
     char *str = NULL;
-    for (size_t i = 0, j = 1, cn = 0, cv = 0 ; j > 0; i++, j--)
+    size_t cv = 0;
+    for (size_t i = 0, j = 1 ; j > 0; i++, j--)
     {
         jsmntok_t *t = &tokens[i];
 
@@ -148,7 +150,6 @@ extract_values(char **column_values,
 
                     wchar_t *str_w = calloc(strlen(str) + 1, sizeof(wchar_t));
                     mbstowcs(str_w, str, strlen(str)+1);
-                    cn++;
                     state = VALUE;
                 }
                 break;
@@ -203,6 +204,8 @@ extract_values(char **column_values,
                 log_die("Invalid state %u", state);
         }
     }
+
+    *ncol = (int) cv;
 }
 
 /*
@@ -376,10 +379,45 @@ make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
                 column_names[*ncol], 
                 column_types[*ncol]);
     }
-    /* populate values which are passed by reference*/
+    printf("Done with loop, %d\n", *ncol);
+    /* populate values which are passed by reference */
     *column_types_p = column_types;
     return hTableDef;
 }
+
+
+void insert_values(char **record_values, TAB_TYPE *column_types, 
+        TAB_HANDLE *hTableDef, int rec_size){
+    
+    TAB_HANDLE hRow;
+    TryOp(TabRowCreate(&hRow, hTableDef));
+    printf("rec_size %d\n", rec_size);
+    for (int i = 0; i < rec_size; i++) {
+            
+        printf("i is %d\n", i);
+        int coltype = column_types[i];
+        printf("t is %d\n", column_types[i]);
+        switch (coltype)
+        {
+        
+           case 7:  // TAB_TYPE_Integer
+                printf("Will insert integer %s!\n", record_values[i]);
+                break;
+
+            case 13: // TAB_TYPE_DateTime
+                printf("Will insert datetime %s!\n", record_values[i]);
+                break;
+            default:
+                printf("Will insert unicode %s!\n", record_values[i]);
+                
+        }
+
+
+    }
+
+    TryOp(TabRowClose(hRow));
+}
+
 
 /* Print a Table's schema to stderr */
 void PrintTableDefinition( TAB_HANDLE hTableDef )
