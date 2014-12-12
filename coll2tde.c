@@ -96,7 +96,6 @@ main (int   argc, char *argv[]){
     TAB_HANDLE hTableDef;
     wchar_t *fname_w = calloc(strlen(filename) + 1, sizeof(wchar_t));
     mbstowcs(fname_w, filename, strlen(filename)+1);
-    printf("Creating tde file: %ls\n", fname_w);
     TableauWChar *sfname = calloc(strlen(filename) + 1, sizeof(TableauWChar));
     TableauWChar sExtract[8];
     ToTableauString(fname_w, sfname);
@@ -114,9 +113,10 @@ main (int   argc, char *argv[]){
     TAB_TYPE *column_types = NULL;
     int ncol = 0;
     int bHasTable;
-    TryOp( TabExtractHasTable(hExtract, sExtract, &bHasTable ) );
+    TryOp(TabExtractHasTable(hExtract, sExtract, &bHasTable));
 
     if (!bHasTable) {
+        printf("Creating tde file: %ls\n", fname_w);
         /* Table does not exist; create it. */
         hTableDef = make_table_definition(jsstr, &column_types, &ncol);
         
@@ -127,12 +127,14 @@ main (int   argc, char *argv[]){
         TryOp(TabTableDefinitionClose( hTableDef));
     }
     else {
+        printf("Found existing file!\n");
         /* Open an existing table to add more rows. */
         TryOp(TabExtractOpenTable(hExtract, sExtract, &hTable));
-        // TODO: add column_types  here 
+        /* Get table definition and column_types */
+        TryOp(TabTableGetTableDefinition(hTable, &hTableDef));
+        get_columns(&column_types, hTableDef, &ncol);
     }
 
-    TryOp(TabTableGetTableDefinition(hTable, &hTableDef));
     
     printf("The length is %d\n", ncol);
     for (int i=0; i< ncol; i++)

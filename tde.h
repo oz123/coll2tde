@@ -32,3 +32,5 @@ void extract_values(char **column_values, char *js, jsmntok_t *tokens, int *ncol
 
 void insert_values(char **record_values, TAB_TYPE *column_types, 
         TAB_HANDLE *hTableDef, int rec_size);
+
+void get_columns(TAB_TYPE **column_types, TAB_HANDLE hTableDef, int *ncols);

@@ -419,6 +419,24 @@ void insert_values(char **record_values, TAB_TYPE *column_types,
 }
 
 
+void get_columns(TAB_TYPE **column_types_p, TAB_HANDLE hTableDef, int *ncols){
+
+    int i, numColumns;
+    TAB_TYPE type;
+    TryOp(TabTableDefinitionGetColumnCount(hTableDef, &numColumns));
+    printf("Got table definition\n");
+    TAB_TYPE *column_types = malloc(numColumns * sizeof(TAB_TYPE));
+    printf("Allocated memory ... \n");
+    for ( i = 0; i < numColumns; ++i ) {
+        TryOp(TabTableDefinitionGetColumnType(hTableDef, i, &type));
+        printf("Got column %d type %d\n", i, type);
+        column_types[i] = type;
+    }
+    
+    *column_types_p = column_types;
+    *ncols = numColumns;
+}
+
 /* Print a Table's schema to stderr */
 void PrintTableDefinition( TAB_HANDLE hTableDef )
 {
@@ -427,7 +445,7 @@ void PrintTableDefinition( TAB_HANDLE hTableDef )
     TableauString str;
     wchar_t* wStr;
 
-    TryOp( TabTableDefinitionGetColumnCount( hTableDef, &numColumns ) );
+    TryOp(TabTableDefinitionGetColumnCount(hTableDef, &numColumns));
     for ( i = 0; i < numColumns; ++i ) {
         TryOp( TabTableDefinitionGetColumnType( hTableDef, i, &type ) );
         TryOp( TabTableDefinitionGetColumnName( hTableDef, i, &str ) );
