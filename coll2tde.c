@@ -124,7 +124,6 @@ main (int   argc, char *argv[]){
             printf("type: %d\n", column_types[i]);
         
         TryOp(TabExtractAddTable(hExtract, sExtract, hTableDef, &hTable));
-        TryOp(TabTableDefinitionClose(hTableDef));
     }
     else {
         printf("Found existing file!\n");
@@ -154,11 +153,12 @@ main (int   argc, char *argv[]){
         extract_values(column_values, jsstr, tokens, &ncol);
         for (int i=0 ; i < ncol ; i++) {
             puts("Trying insert");
-            insert_values(column_values, column_types, hTable, ncol);
+            insert_values(column_values, column_types, hTableDef, ncol);
             puts("Successfully inserted");
         }
     }
     
+    TryOp(TabTableDefinitionClose(hTableDef));
     TryOp(TabExtractClose(hExtract));
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection_p);

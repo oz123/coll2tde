@@ -398,11 +398,11 @@ make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
 
 
 void insert_values(wchar_t **record_values, TAB_TYPE *column_types, 
-        TAB_HANDLE *hTable, int rec_size){
+        TAB_HANDLE *hTableDef, int rec_size){
     
     TAB_HANDLE hRow;
-    TAB_HANDLE hTableDef;
-    TryOp( TabTableGetTableDefinition( hTable, &hTableDef ) );
+    //TAB_HANDLE hTableDef;
+    //TryOp( TabTableGetTableDefinition( hTable, &hTableDef ) );
     puts("Trying to create row");
     TryOp(TabRowCreate(&hRow, hTableDef));
     printf("Created new row ...\n");
@@ -423,26 +423,19 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
 
            case 13: // TAB_TYPE_DateTime
                 printf("Will insert datetime %ls!\n", record_values[i]);
-                struct tm *time, *gtime;
+                struct tm *gtime;
                 char *ts = malloc(wcslen(record_values[i]));
                 wcstombs(ts, record_values[i], wcslen(record_values[i]));
                 char epoch[11];
                 memset(epoch, '\0', sizeof(epoch));
                 strncpy(epoch, ts+12, 10*sizeof(char));
-                printf("epoch is %s!\n", epoch);
-                char buf[255];
-                time = convert_epoch_to_localtime(epoch);
-                strftime(buf, sizeof(buf), "%H %Z" , time);
-                puts(buf);
                 gtime = convert_epoch_to_gmt(epoch);
-                strftime(buf, sizeof(buf), "%Y %H %Z" , gtime);
-
-                puts(buf);
-                
-                printf("YEAR %d %d\n", gtime->tm_year, gtime->tm_mday);
-                
-                TryOp(TabRowSetDateTime(hRow, i, 1900 + gtime->tm_year, 7, 3, 
-                            11, 40, 12, 4550));
+                TryOp(TabRowSetDateTime(hRow, i, 1900 + gtime->tm_year, 
+                                        gtime->tm_mon, gtime->tm_mday, 
+                                        gtime->tm_hour, gtime->tm_min, 
+                                        gtime->tm_sec, 0));
+                /* Unfortunately, ctime is only accurate at the second level */
+                                      
                 break;
             
            case 16: // TAB_TYPE_UnicodeString
@@ -460,8 +453,7 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                                       wcstold(record_values[i], &stopwcs)));                   break;
            
            default:
-                printf("Will insert unicode %ls!\n", record_values[i]);
-                
+                log_die("Unknown tabeleau type...");
         }
 
 
@@ -488,38 +480,3 @@ void get_columns(TAB_TYPE **column_types_p, TAB_HANDLE hTableDef, int *ncols){
     *column_types_p = column_types;
     *ncols = numColumns;
 }
-
-
-/* Insert a few rows of data. */
-void InsertData( TAB_HANDLE hTable )
-{
-    TAB_HANDLE hRow;
-    TAB_HANDLE hTableDef;
-    int i;
-
-    TableauWChar sUniBeans[9];
-    ToTableauString( L"uniBeans", sUniBeans );
-
-    TryOp( TabTableGetTableDefinition( hTable, &hTableDef ) );
-
-   /* Create a row to insert data */
-    TryOp( TabRowCreate( &hRow, hTableDef ) );
-
-    TryOp( TabRowSetDateTime(   hRow, 0, 2012, 7, 3, 11, 40, 12, 4550 ) ); /* Purchased */
-    TryOp( TabRowSetCharString( hRow, 1, "Beans" )  );                     /* Product */
-    TryOp( TabRowSetString(     hRow, 2, sUniBeans ) );                    /* uProduct */
-    TryOp( TabRowSetDouble(     hRow, 3, 1.08 ) );                         /* Price */
-    TryOp( TabRowSetDate(       hRow, 6, 2029, 1, 1 ) );                   /* Expiration date */
-    TryOp( TabRowSetCharString( hRow, 7, "Bohnen" ) )                      /* Produkt */
-
-    /* Insert a few rows */
-    for ( i = 0; i < 10; ++i ) {
-        TryOp( TabRowSetInteger(  hRow, 4, i * 10) );                      /* Quantity */
-        TryOp( TabRowSetBoolean(  hRow, 5, i % 2 ) );                      /* Taxed */
-        TryOp( TabTableInsert( hTable, hRow ) );
-    }
-
-    TryOp( TabRowClose( hRow ) );
-    TryOp( TabTableDefinitionClose( hTableDef ) );
-}
-

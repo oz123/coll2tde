@@ -32,6 +32,6 @@ void extract_values(wchar_t **column_values, char *js, jsmntok_t *tokens,
                     int *ncols);
 
 void insert_values(wchar_t **record_values, TAB_TYPE *column_types, 
-                   TAB_HANDLE *hTable, int rec_size);
+                   TAB_HANDLE *hTableDef, int rec_size);
 
 void get_columns(TAB_TYPE **column_types, TAB_HANDLE hTableDef, int *ncols);
