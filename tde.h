@@ -23,7 +23,7 @@ void InsertData( TAB_HANDLE hTable );
 void parse_keys_values(wchar_t **column_names, TAB_TYPE *column_types, 
                        char *js, jsmntok_t *tokens);
 
-struct tm* convert_epoch_to_gmt(char * epoch);
+struct tm* convert_epoch_to_localtime(char * epoch);
 
 int check_number(char *str, int * ival, double *fval);
 

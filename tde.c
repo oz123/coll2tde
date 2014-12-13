@@ -95,14 +95,24 @@ int check_date(char *js, jsmntok_t *t){
 
 
 /*
- * convert the unix epoch string to GMT 
+ * convert the unix epoch string to localtime
+ * */
+struct tm* convert_epoch_to_localtime(char * epoch){
+    struct tm *time;
+    time_t c;
+    c = strtoul(epoch, NULL, 0);
+    time = localtime(&c);
+    return time;
+}
+
+/*
+ * convert the unix epoch string to gmt
  * */
 struct tm* convert_epoch_to_gmt(char * epoch){
     struct tm *time;
     time_t c;
-    // todo, implement check that len(epoch) == 14
     c = strtoul(epoch, NULL, 0);
-    time = localtime(&c);
+    time = gmtime(&c);
     return time;
 }
 
@@ -410,6 +420,20 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
 
            case 13: // TAB_TYPE_DateTime
                 printf("Will insert datetime %ls!\n", record_values[i]);
+                struct tm *time, *gtime;
+                char *ts = malloc(wcslen(record_values[i]));
+                wcstombs(ts, record_values[i], wcslen(record_values[i]));
+                char epoch[11];
+                memset(epoch, '\0', sizeof(epoch));
+                strncpy(epoch, ts+12, 10*sizeof(char));
+                printf("epoch is %s!\n", epoch);
+                char buf[255];
+                time = convert_epoch_to_localtime(epoch);
+                strftime(buf, sizeof(buf), "%H %Z" , time);
+                puts(buf);
+                gtime = convert_epoch_to_gmt(epoch);
+                strftime(buf, sizeof(buf), "%H %Z" , gtime);
+                puts(buf);
                 break;
             
            case 16: // TAB_TYPE_UnicodeString
