@@ -89,7 +89,7 @@ main (int   argc, char *argv[]){
     
     mongoc_client_t *client_p;
     mongoc_collection_t *collection_p;
-    mongoc_cursor_t *cursor;
+    mongoc_cursor_t *cursor = NULL;
     const bson_t *doc;
     TAB_HANDLE hExtract;
     TAB_HANDLE hTable;
@@ -99,7 +99,7 @@ main (int   argc, char *argv[]){
     TableauWChar *sfname = calloc(strlen(filename) + 1, sizeof(TableauWChar));
     TableauWChar sExtract[8];
     ToTableauString(fname_w, sfname);
-    ToTableauString( L"Extract", sExtract );
+    ToTableauString(L"Extract", sExtract);
     TryOp(TabExtractCreate(&hExtract, sfname));
     char *jsstr = NULL;
     /* TODO: add option to parse aggregation, and get this cursor 
@@ -107,15 +107,15 @@ main (int   argc, char *argv[]){
      * bson_new_from_json
      * mongoc_collection_aggregate should than be used to get a cursor
      * */
-    cursor = get_one(host, database, collection_name, &collection_p, &client_p);
-    mongoc_cursor_next (cursor, &doc);
-    jsstr = bson_as_json (doc, NULL);
     TAB_TYPE *column_types = NULL;
     int ncol = 0;
     int bHasTable;
     TryOp(TabExtractHasTable(hExtract, sExtract, &bHasTable));
 
     if (!bHasTable) {
+        cursor = get_one(host, database, collection_name, &collection_p, &client_p);
+        mongoc_cursor_next (cursor, &doc);
+        jsstr = bson_as_json (doc, NULL);
         printf("Creating tde file: %ls\n", fname_w);
         /* Table does not exist; create it. */
         hTableDef = make_table_definition(jsstr, &column_types, &ncol);
@@ -124,7 +124,7 @@ main (int   argc, char *argv[]){
             printf("type: %d\n", column_types[i]);
         
         TryOp(TabExtractAddTable(hExtract, sExtract, hTableDef, &hTable));
-        TryOp(TabTableDefinitionClose( hTableDef));
+        TryOp(TabTableDefinitionClose(hTableDef));
     }
     else {
         printf("Found existing file!\n");
@@ -139,19 +139,24 @@ main (int   argc, char *argv[]){
     printf("The length is %d\n", ncol);
     for (int i=0; i< ncol; i++)
         printf("Column %d is type %d\n", i, column_types[i]);
-    mongoc_cursor_destroy(cursor);
+    if ( cursor != NULL )
+        mongoc_cursor_destroy(cursor);
     /* revert cursor to begining of query */
     //mongoc_cursor_t *cursor_copy;
     //cursor_copy = mongoc_cursor_clone (cursor);
     cursor = get_one(host, database, collection_name, &collection_p, &client_p);
+    puts("got cursor");
     /* do all the fun inserting data here ...*/
     while (mongoc_cursor_next (cursor, &doc)) {
         jsstr = bson_as_json (doc, NULL);
         jsmntok_t *tokens = json_tokenise(jsstr);
         wchar_t **column_values = malloc(tokens[0].size / 2 * sizeof(wchar_t*));
         extract_values(column_values, jsstr, tokens, &ncol);
-        for (int i=0 ; i < ncol ; i++)
-            insert_values(column_values, column_types, hTableDef, ncol);
+        for (int i=0 ; i < ncol ; i++) {
+            puts("Trying insert");
+            insert_values(column_values, column_types, hTable, ncol);
+            puts("Successfully inserted");
+        }
     }
     
     TryOp(TabExtractClose(hExtract));

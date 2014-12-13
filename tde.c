@@ -398,9 +398,12 @@ make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
 
 
 void insert_values(wchar_t **record_values, TAB_TYPE *column_types, 
-        TAB_HANDLE *hTableDef, int rec_size){
+        TAB_HANDLE *hTable, int rec_size){
     
     TAB_HANDLE hRow;
+    TAB_HANDLE hTableDef;
+    TryOp( TabTableGetTableDefinition( hTable, &hTableDef ) );
+    puts("Trying to create row");
     TryOp(TabRowCreate(&hRow, hTableDef));
     printf("Created new row ...\n");
     for (int i = 0; i < rec_size; i++) {
@@ -432,8 +435,14 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                 strftime(buf, sizeof(buf), "%H %Z" , time);
                 puts(buf);
                 gtime = convert_epoch_to_gmt(epoch);
-                strftime(buf, sizeof(buf), "%H %Z" , gtime);
+                strftime(buf, sizeof(buf), "%Y %H %Z" , gtime);
+
                 puts(buf);
+                
+                printf("YEAR %d %d\n", gtime->tm_year, gtime->tm_mday);
+                
+                TryOp(TabRowSetDateTime(hRow, i, 1900 + gtime->tm_year, 7, 3, 
+                            11, 40, 12, 4550));
                 break;
             
            case 16: // TAB_TYPE_UnicodeString
