@@ -150,13 +150,13 @@ main (int   argc, char *argv[]){
         jsmntok_t *tokens = json_tokenise(jsstr);
         wchar_t **column_values = malloc(tokens[0].size / 2 * sizeof(wchar_t*));
         extract_values(column_values, jsstr, tokens, &ncol);
+        // TODO: fix logic , we need to create row for every record ...
+        // not for every column
         for (int i=0 ; i < ncol ; i++) {
             insert_values(column_values, column_types, hTable, ncol);
-            puts("Successfully inserted");
         }
     }
     
-    //TryOp(TabTableDefinitionClose(hTableDef));
     TryOp(TabExtractClose(hExtract));
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection_p);

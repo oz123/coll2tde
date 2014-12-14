@@ -407,7 +407,12 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
     TryOp(TabRowCreate(&hRow, hTableDef));
     printf("Created new row ...\n");
     for (int i = 0; i < rec_size; i++) {
-            
+        
+        if (! wcscmp(L"null", record_values[i])){
+            printf("Found null!\n");
+            TryOp(TabRowSetNull(hRow, i));
+            continue;
+            }
         int coltype = column_types[i];
         switch (coltype)
         {
