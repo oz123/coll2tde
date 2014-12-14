@@ -307,8 +307,8 @@ parse_keys_values(wchar_t **column_names,
                         column_types[cv] = TAB_TYPE_Integer;
                     } else if (rv == 2) {
                         column_types[cv] = TAB_TYPE_Double;
-                    } else {
-                        column_types[cv] = TAB_TYPE_Double;
+                    } else if ((! strcmp("true", str)) || (! strcmp("false", str))) {
+                        column_types[cv] = TAB_TYPE_Boolean;
                     }  
                 }
                 
@@ -470,7 +470,17 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                 wchar_t *stopwcs;
                 double valf = wcstold(record_values[i], &stopwcs);
                 TryOp(TabRowSetDouble(hRow, i, valf));                   
-                printf("Successfully inserted value %lf\n", valf);
+                break;
+           
+           case 11: // TAB_TYPE_Boolean
+                printf("Will insert boolean  %ls!\n", record_values[i]);
+                if (! wcscmp(record_values[i], L"true")) {
+                    TryOp(TabRowSetBoolean(hRow, i, 1))
+                } else if (!wcscmp(record_values[i], L"false")) {
+                    TryOp(TabRowSetBoolean(hRow, i, 0))
+                } else {
+                log_die("Unknown boolean value ... %ls\n", record_values[i]);
+                }
                 break;
            
            default:
