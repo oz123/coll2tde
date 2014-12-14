@@ -398,11 +398,11 @@ make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
 
 
 void insert_values(wchar_t **record_values, TAB_TYPE *column_types, 
-        TAB_HANDLE *hTableDef, int rec_size){
+        TAB_HANDLE *hTable, int rec_size){
     
     TAB_HANDLE hRow;
-    //TAB_HANDLE hTableDef;
-    //TryOp( TabTableGetTableDefinition( hTable, &hTableDef ) );
+    TAB_HANDLE hTableDef;
+    TryOp( TabTableGetTableDefinition(hTable, &hTableDef));
     puts("Trying to create row");
     TryOp(TabRowCreate(&hRow, hTableDef));
     printf("Created new row ...\n");
@@ -458,8 +458,9 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
 
 
     }
-
+    TryOp( TabTableInsert( hTable, hRow ) );
     TryOp(TabRowClose(hRow));
+    TryOp(TabTableDefinitionClose(hTableDef));
 }
 
 

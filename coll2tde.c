@@ -120,8 +120,8 @@ main (int   argc, char *argv[]){
         /* Table does not exist; create it. */
         hTableDef = make_table_definition(jsstr, &column_types, &ncol);
         
-        for (int i=0 ; i < ncol ; i++)
-            printf("type: %d\n", column_types[i]);
+        //for (int i=0 ; i < ncol ; i++)
+        //    printf("type: %d\n", column_types[i]);
         
         TryOp(TabExtractAddTable(hExtract, sExtract, hTableDef, &hTable));
     }
@@ -136,15 +136,14 @@ main (int   argc, char *argv[]){
 
     
     printf("The length is %d\n", ncol);
-    for (int i=0; i< ncol; i++)
-        printf("Column %d is type %d\n", i, column_types[i]);
+    //for (int i=0; i< ncol; i++)
+    //    printf("Column %d is type %d\n", i, column_types[i]);
     if ( cursor != NULL )
         mongoc_cursor_destroy(cursor);
     /* revert cursor to begining of query */
     //mongoc_cursor_t *cursor_copy;
     //cursor_copy = mongoc_cursor_clone (cursor);
     cursor = get_one(host, database, collection_name, &collection_p, &client_p);
-    puts("got cursor");
     /* do all the fun inserting data here ...*/
     while (mongoc_cursor_next (cursor, &doc)) {
         jsstr = bson_as_json (doc, NULL);
@@ -152,13 +151,12 @@ main (int   argc, char *argv[]){
         wchar_t **column_values = malloc(tokens[0].size / 2 * sizeof(wchar_t*));
         extract_values(column_values, jsstr, tokens, &ncol);
         for (int i=0 ; i < ncol ; i++) {
-            puts("Trying insert");
-            insert_values(column_values, column_types, hTableDef, ncol);
+            insert_values(column_values, column_types, hTable, ncol);
             puts("Successfully inserted");
         }
     }
     
-    TryOp(TabTableDefinitionClose(hTableDef));
+    //TryOp(TabTableDefinitionClose(hTableDef));
     TryOp(TabExtractClose(hExtract));
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection_p);
