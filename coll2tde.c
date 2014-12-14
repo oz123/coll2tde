@@ -150,11 +150,8 @@ main (int   argc, char *argv[]){
         jsmntok_t *tokens = json_tokenise(jsstr);
         wchar_t **column_values = malloc(tokens[0].size / 2 * sizeof(wchar_t*));
         extract_values(column_values, jsstr, tokens, &ncol);
-        // TODO: fix logic , we need to create row for every record ...
-        // not for every column
-        for (int i=0 ; i < ncol ; i++) {
-            insert_values(column_values, column_types, hTable, ncol);
-        }
+        // insert_values adds a row, column_values is actually row values
+        insert_values(column_values, column_types, hTable, ncol);
     }
     
     TryOp(TabExtractClose(hExtract));

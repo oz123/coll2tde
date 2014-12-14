@@ -421,9 +421,14 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                 printf("Will insert integer %ls!\n", record_values[i]);
                 char *bs = (char*)malloc(wcslen(record_values[i]));
                 wcstombs(bs, record_values[i], strlen(bs));
+                errno = 0;
                 char* p = NULL;
                 long val = strtol(bs, &p, 0);
+                if (errno != 0)
+                    log_die("Failed to convert %ls", record_values[i]);// conversion failed (EINVAL, ERANGE)
+                
                 TryOp(TabRowSetInteger(hRow, i, val));
+                printf("Successfully inserted value %ld\n", val);
                 break;
 
            case 13: // TAB_TYPE_DateTime
@@ -454,8 +459,10 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
            case 10: // TAB_TYPE_Double 
                 printf("Will insert double  %ls!\n", record_values[i]);
                 wchar_t *stopwcs;
-                TryOp(TabRowSetDouble(hRow, i, 
-                                      wcstold(record_values[i], &stopwcs)));                   break;
+                double valf = wcstold(record_values[i], &stopwcs);
+                TryOp(TabRowSetDouble(hRow, i, valf));                   
+                printf("Successfully inserted value %lf\n", valf);
+                break;
            
            default:
                 log_die("Unknown tabeleau type...");
