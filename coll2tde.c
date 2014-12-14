@@ -1,11 +1,5 @@
-#include <bson.h>
 #include <stdio.h>
 #include <getopt.h>
-#include <string.h>
-#include <unistd.h>
-#include <wchar.h>
-#include "DataExtract.h"
-#include "jsmn/jsmn.h"
 #include "json.h"
 #include "mongo.h"
 #include "tde.h"
