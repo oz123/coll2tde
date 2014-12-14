@@ -71,15 +71,21 @@ main (int   argc, char *argv[]){
     if ( filename == NULL ) {
         filename = strcat(collection_name, ".tde");  
     }
-    /*
+    
+
     if ( columns != NULL ) {
-        printf("columns: %s\n", columns); 
+        printf("columns %s\n", columns);
+        /*
+        bson_t *columns_bson = parse_columns(columns);
+         */
     }
     if ( aggregation != NULL ) {
-        printf("aggregation: %s\n", aggregation);
+        printf("aggregation %s\n", aggregation);
+        /* bson_t *aggregation_bson = parse_aggregation(aggregation);
+         */
     }
 
-    printf("filename: %s\n", filename); */
+    /* printf("filename: %s\n", filename); */
     
     mongoc_client_t *client_p;
     mongoc_collection_t *collection_p;
@@ -149,6 +155,8 @@ main (int   argc, char *argv[]){
     }
     
     TryOp(TabExtractClose(hExtract));
+    /* bson_destroy(columns_bson);
+    bson_destroy(aggregation_bson); */
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection_p);
     mongoc_client_destroy(client_p);

@@ -23,3 +23,19 @@ get_one(char *host, char *db, char *collection_name,
     return cursor;
 
 }
+
+bson_t * parse_columns(char * columns){
+
+    bson_t *columns_bson = NULL;
+    columns_bson = bson_new ();
+
+    return columns_bson;
+}
+
+bson_t * parse_aggregation(char * aggregation){
+
+    bson_t *aggregation_bson = NULL;
+    aggregation_bson = bson_new ();
+    
+    return aggregation_bson;
+}

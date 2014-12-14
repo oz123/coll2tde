@@ -402,10 +402,9 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
     
     TAB_HANDLE hRow;
     TAB_HANDLE hTableDef;
-    TryOp( TabTableGetTableDefinition(hTable, &hTableDef));
-    puts("Trying to create row");
+    TryOp(TabTableGetTableDefinition(hTable, &hTableDef));
     TryOp(TabRowCreate(&hRow, hTableDef));
-    printf("Created new row ...\n");
+    
     for (int i = 0; i < rec_size; i++) {
         
         if (! wcscmp(L"null", record_values[i])){
@@ -414,14 +413,19 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
             continue;
             }
         int coltype = column_types[i];
+        char epoch[11];
+        struct tm *gtime;
+        char *ts; 
+        TableauWChar *value;
+
         switch (coltype)
         {
         
            case 7:  // TAB_TYPE_Integer
-                printf("Will insert integer %ls!\n", record_values[i]);
+                /* printf("Will insert integer %ls!\n", record_values[i]);*/
+                errno = 0;
                 char *bs = (char*)malloc(wcslen(record_values[i]));
                 wcstombs(bs, record_values[i], strlen(bs));
-                errno = 0;
                 char* p = NULL;
                 long val = strtol(bs, &p, 0);
                 if (errno != 0)
@@ -432,11 +436,9 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                 break;
 
            case 13: // TAB_TYPE_DateTime
-                printf("Will insert datetime %ls!\n", record_values[i]);
-                struct tm *gtime;
-                char *ts = malloc(wcslen(record_values[i]));
+                /* printf("Will insert datetime %ls!\n", record_values[i]); */
+                ts = malloc(wcslen(record_values[i]));
                 wcstombs(ts, record_values[i], wcslen(record_values[i]));
-                char epoch[11];
                 memset(epoch, '\0', sizeof(epoch));
                 strncpy(epoch, ts+12, 10*sizeof(char));
                 gtime = convert_epoch_to_gmt(epoch);
@@ -445,12 +447,10 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                                         gtime->tm_hour, gtime->tm_min, 
                                         gtime->tm_sec, 0));
                 /* Unfortunately, ctime is only accurate at the second level */
-                                      
                 break;
             
            case 16: // TAB_TYPE_UnicodeString
-                printf("Will insert unicode %ls!\n", record_values[i]);
-                TableauWChar *value = malloc(wcslen(record_values[i])+1);
+                value = malloc(wcslen(record_values[i])+1);
                 ToTableauString(record_values[i], value);
                 TryOp(TabRowSetString(hRow, i, value));
                 free(value);
