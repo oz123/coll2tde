@@ -71,7 +71,7 @@ main (int   argc, char *argv[]){
     if ( filename == NULL ) {
         filename = strcat(collection_name, ".tde");  
     }
-    
+    /*
     if ( columns != NULL ) {
         printf("columns: %s\n", columns); 
     }
@@ -79,7 +79,7 @@ main (int   argc, char *argv[]){
         printf("aggregation: %s\n", aggregation);
     }
 
-    printf("filename: %s\n", filename);
+    printf("filename: %s\n", filename); */
     
     mongoc_client_t *client_p;
     mongoc_collection_t *collection_p;
