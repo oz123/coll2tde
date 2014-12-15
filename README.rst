@@ -16,10 +16,10 @@ A command line utility to convert a mongodb collection to a TDE file.
   This is an attempt to re-create those pesky TDE files using C. 
 
 
-## Installation
-
-### Dependencies
-
+Installation
+------------
+Dependencies
+^^^^^^^^^^^^^
 The dependencies are:
 
  1. TABLEAU C API
@@ -33,7 +33,8 @@ Just type::
 
 And then install the binary coll2tde in your path. 
 
-## USAGE:
+USAGE:
+------
 
 The most basic use is to convert a collection as a whole to a DataExtract file. 
 This however assumes that the collection is flat, and all documents are simple
@@ -58,7 +59,8 @@ name.
 The DataExtract extract file name will always be the collection name with the
 suffix `.tde`.
 
-### Some notes about the exported data
+Some notes about the exported data
+----------------------------------
 
  * Date formating in C with MongoDB is not fun. 
    It depends on the locale of the host where `coll2tde` runs and the time
