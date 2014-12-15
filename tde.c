@@ -459,6 +459,7 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                 break;
             
            case 16: // TAB_TYPE_UnicodeString
+                printf("Will insert double  %ls!\n", record_values[i]);
                 value = malloc(wcslen(record_values[i])+1);
                 ToTableauString(record_values[i], value);
                 TryOp(TabRowSetString(hRow, i, value));

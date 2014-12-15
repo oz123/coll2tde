@@ -70,3 +70,9 @@ suffix `.tde`.
  * MongoDB internal OID is allways dropped. Hence, it will not be exported to 
    the DataExtract. 
 
+ * You can specify which fields you want to include::
+
+   ./coll2tde -h localhost -d test -c test --fields '{"name":1, "last_name:1}'
+
+
+

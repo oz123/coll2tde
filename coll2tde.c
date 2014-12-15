@@ -4,15 +4,14 @@
 #include "mongo.h"
 #include "tde.h"
 
-#define JSON_TOKENS 256
-#define COLS 999 
+#define FIELDS 999 
 #define AGGR 1001 
 
 //static int verbose_flag;
 
 void print_usage() {
-    printf("Usage: coll2tde -h HOST -d DATABASE -c COLLECTION [-s "
-           "COLUMNS] [-a AGGREGATION] -o TDEFILE\n");
+    printf("Usage: coll2tde -h HOST -d DATABASE -c COLLECTION [--fields "
+           "FIELDS] [-a AGGREGATION] -o TDEFILE\n");
 }
 
 
@@ -23,16 +22,16 @@ main (int   argc, char *argv[]){
     char *database = NULL;
     char *collection_name = NULL;
     char *filename = NULL;
-    char *columns = NULL;
+    char *fields = NULL;
     char *aggregation = NULL;
     
     static struct option long_options[] = {
         {"host",      required_argument,       0,  'h' },
         {"database", no_argument,       0,  'd' },
         {"collection",    required_argument, 0,  'c' },
-        {"columns",   required_argument, 0,  COLS },
+        {"fields",   required_argument, 0,  COLS },
         {"aggregation",   required_argument, 0,  AGGR },
-        {"filename",   required_argument, 0,  'f' },
+        {"filename",   required_argument, 0,  'o' },
         {0,           0,                 0,  0   }
     };
 
@@ -48,7 +47,7 @@ main (int   argc, char *argv[]){
                  break;
              case 'f' : filename = optarg;
                  break;
-             case COLS : columns = optarg;
+             case FIELDS: fields = optarg;
                  break;
              case AGGR : aggregation = optarg;
                  break;
@@ -73,12 +72,11 @@ main (int   argc, char *argv[]){
     }
     
 
-    if ( columns != NULL ) {
-        printf("columns %s\n", columns);
-        /*
+    /*if ( fields != NULL ) {
+        printf("fields %s\n", fields);
         bson_t *columns_bson = parse_columns(columns);
-         */
-    }
+    
+    }*/
     if ( aggregation != NULL ) {
         printf("aggregation %s\n", aggregation);
         /* bson_t *aggregation_bson = parse_aggregation(aggregation);
@@ -113,7 +111,7 @@ main (int   argc, char *argv[]){
     TryOp(TabExtractHasTable(hExtract, sExtract, &bHasTable));
 
     if (!bHasTable) {
-        cursor = get_one(host, database, collection_name, &collection_p, &client_p);
+        cursor = get_one(host, database, collection_name, fields, &collection_p, &client_p);
         mongoc_cursor_next (cursor, &doc);
         jsstr = bson_as_json (doc, NULL);
         printf("Creating tde file: %ls\n", fname_w);
@@ -143,7 +141,7 @@ main (int   argc, char *argv[]){
     /* revert cursor to begining of query */
     //mongoc_cursor_t *cursor_copy;
     //cursor_copy = mongoc_cursor_clone (cursor);
-    cursor = get_one(host, database, collection_name, &collection_p, &client_p);
+    cursor = get_one(host, database, collection_name, fields, &collection_p, &client_p);
     /* do all the fun inserting data here ...*/
     while (mongoc_cursor_next (cursor, &doc)) {
         jsstr = bson_as_json (doc, NULL);
