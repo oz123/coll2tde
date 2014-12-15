@@ -11,7 +11,7 @@
 
 void print_usage() {
     printf("Usage: coll2tde -h HOST -d DATABASE -c COLLECTION [--fields "
-           "FIELDS] [-a AGGREGATION] -o TDEFILE\n");
+           "FIELDS] [-a AGGREGATION] -f TDEFILE\n");
 }
 
 
@@ -71,12 +71,8 @@ main (int   argc, char *argv[]){
         filename = strcat(collection_name, ".tde");  
     }
     
-
-    /*if ( fields != NULL ) {
-        printf("fields %s\n", fields);
-        bson_t *columns_bson = parse_columns(columns);
     
-    }*/
+    
     if ( aggregation != NULL ) {
         printf("aggregation %s\n", aggregation);
         /* bson_t *aggregation_bson = parse_aggregation(aggregation);

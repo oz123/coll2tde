@@ -49,15 +49,15 @@ A most basic usage of this program whould be::
 
     $ ./coll2tde -h localhost -d test -c test
 
-The option `-h` accepts any mongodb URI, hence, this should also work::
+The option ``-h`` accepts any mongodb URI, hence, this should also work::
 
     $ ./coll2tde -h mongodb://user:secret@server:port ....
 
-The option `-d` accepts the database name, the option `-c` accepts the collection 
+The option ``-d`` accepts the database name, the option ``-c`` accepts the collection 
 name. 
 
 The DataExtract extract file name will always be the collection name with the
-suffix `.tde`.
+suffix ``.tde``. You can override this with the flag ``-f``.
 
 Some notes about the exported data
 ----------------------------------
