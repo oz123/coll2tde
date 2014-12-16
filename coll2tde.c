@@ -67,12 +67,13 @@ main (int   argc, char *argv[]){
         exit(EXIT_FAILURE);
     }
     
-    if ( filename == NULL ) {
+    if (filename == NULL) {
         filename = malloc(strlen(collection_name));
         strcpy(filename, collection_name);
         strcat(filename, ".tde");  
     }
     
+
     if ( aggregation != NULL ) {
         printf("aggregation %s\n", aggregation);
     }

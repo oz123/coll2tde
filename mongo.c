@@ -17,8 +17,12 @@ get_cursor(char *host, char *db, char *collection_name, const char *json_fields,
         bson_concat(fields, parse_json(json_fields));
         }
     
+    char *host_uri = malloc(10);
+    strcpy(host_uri, "mongodb://");
+    strcat(host_uri, host);  
+    printf("Trying to connect to %s\n", host_uri);
     mongoc_cursor_t *cursor;
-    *client_p = mongoc_client_new("mongodb://localhost:27017/");
+    *client_p = mongoc_client_new(host_uri);
     *collection_p = mongoc_client_get_collection (*client_p, db, collection_name);
     cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
                                     0, 0, 0, query, fields, NULL);
