@@ -68,7 +68,9 @@ main (int   argc, char *argv[]){
     }
     
     if ( filename == NULL ) {
-        filename = strcat(collection_name, ".tde");  
+        filename = malloc(strlen(collection_name));
+        strcpy(filename, collection_name);
+        strcat(filename, ".tde");  
     }
     
     if ( aggregation != NULL ) {
@@ -101,7 +103,7 @@ main (int   argc, char *argv[]){
     TryOp(TabExtractHasTable(hExtract, sExtract, &bHasTable));
 
     if (!bHasTable) {
-        cursor = get_one(host, database, collection_name, fields, &collection_p, &client_p);
+        cursor = get_cursor(host, database, collection_name, fields, &collection_p, &client_p);
         mongoc_cursor_next (cursor, &doc);
         jsstr = bson_as_json (doc, NULL);
         printf("Creating tde file: %ls\n", fname_w);
@@ -131,7 +133,7 @@ main (int   argc, char *argv[]){
     /* revert cursor to begining of query */
     //mongoc_cursor_t *cursor_copy;
     //cursor_copy = mongoc_cursor_clone (cursor);
-    cursor = get_one(host, database, collection_name, fields, &collection_p, &client_p);
+    cursor = get_cursor(host, database, collection_name, fields, &collection_p, &client_p);
     /* do all the fun inserting data here ...*/
     while (mongoc_cursor_next (cursor, &doc)) {
         jsstr = bson_as_json (doc, NULL);

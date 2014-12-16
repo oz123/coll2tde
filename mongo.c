@@ -3,7 +3,7 @@
 
 /* get_one never returns _id */
 mongoc_cursor_t *
-get_one(char *host, char *db, char *collection_name, const char *json_fields, 
+get_cursor(char *host, char *db, char *collection_name, const char *json_fields, 
            mongoc_collection_t **collection_p,
            mongoc_client_t **client_p){
     mongoc_init();
@@ -14,12 +14,12 @@ get_one(char *host, char *db, char *collection_name, const char *json_fields,
     fields = BCON_NEW("_id", BCON_INT32 (0));
 
     if (json_fields){
-        bson_concat(fields, parse_columns(json_fields));
+        bson_concat(fields, parse_json(json_fields));
         }
     
     mongoc_cursor_t *cursor;
     *client_p = mongoc_client_new("mongodb://localhost:27017/");
-    *collection_p = mongoc_client_get_collection (*client_p, "test", "test");
+    *collection_p = mongoc_client_get_collection (*client_p, db, collection_name);
     cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
                                     0, 0, 0, query, fields, NULL);
     bson_destroy(query);
