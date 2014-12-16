@@ -12,16 +12,10 @@ get_one(char *host, char *db, char *collection_name, const char *json_fields,
     query = bson_new ();
     fields = bson_new ();
     fields = BCON_NEW("_id", BCON_INT32 (0));
-    bson_error_t error;
 
     if (json_fields){
-        bson_t *n_fields = bson_new_from_json((unsigned char *)json_fields, -1, &error);
-        if (!n_fields) {
-            log_die("Error: %s\n", error.message);
-        } else {
-          bson_concat(fields, n_fields);
+        bson_concat(fields, parse_columns(json_fields));
         }
-    }
     
     mongoc_cursor_t *cursor;
     *client_p = mongoc_client_new("mongodb://localhost:27017/");
@@ -34,12 +28,17 @@ get_one(char *host, char *db, char *collection_name, const char *json_fields,
 
 }
 
-bson_t * parse_columns(char * columns){
+bson_t * parse_json(const char * json_fields){
 
-    bson_t *columns_bson = NULL;
-    columns_bson = bson_new ();
-
-    return columns_bson;
+    bson_error_t error;
+    bson_t *n_fields = bson_new_from_json((unsigned char *)json_fields, -1, &error);
+    if (!n_fields) {
+        log_die("Error: %s\n", error.message);
+    } else {
+      return n_fields;
+    }
+    log_die("Error: something bad happend in parse_columns");
+    return n_fields; // this should never be reached ...
 }
 
 bson_t * parse_aggregation(char * aggregation){

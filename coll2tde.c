@@ -71,16 +71,10 @@ main (int   argc, char *argv[]){
         filename = strcat(collection_name, ".tde");  
     }
     
-    
-    
     if ( aggregation != NULL ) {
         printf("aggregation %s\n", aggregation);
-        /* bson_t *aggregation_bson = parse_aggregation(aggregation);
-         */
     }
 
-    /* printf("filename: %s\n", filename); */
-    
     mongoc_client_t *client_p;
     mongoc_collection_t *collection_p;
     mongoc_cursor_t *cursor = NULL;
