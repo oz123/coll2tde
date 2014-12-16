@@ -76,5 +76,10 @@ Some notes about the exported data
 
    ./coll2tde -h localhost -d test -c test --fields '{"name":1, "last_name:1}'
 
+ * You can specify a query to limit the data exported, for example::
 
+   ./coll2tde -h localhost -d test -c test --query '{"credit": {"$gt" : 10}}'
+
+The flags ``-q`` and ``--fields`` support all the syntax that MongoDB's ``find`` 
+method support. 
 

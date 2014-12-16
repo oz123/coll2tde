@@ -10,7 +10,7 @@
 //static int verbose_flag;
 
 void print_usage() {
-    printf("Usage: coll2tde -h HOST -d DATABASE -c COLLECTION [--fields "
+    printf("Usage: coll2tde -h HOST -d DATABASE -c COLLECTION [-q QUERY][--fields "
            "FIELDS] [-a AGGREGATION] -f TDEFILE\n");
 }
 
@@ -23,6 +23,7 @@ main (int   argc, char *argv[]){
     char *collection_name = NULL;
     char *filename = NULL;
     char *fields = NULL;
+    char *query = NULL;
     char *aggregation = NULL;
     
     static struct option long_options[] = {
@@ -30,13 +31,14 @@ main (int   argc, char *argv[]){
         {"database", no_argument,       0,  'd' },
         {"collection",    required_argument, 0,  'c' },
         {"fields",   required_argument, 0,  COLS },
+        {"query",   required_argument, 0,  'q' },
         {"aggregation",   required_argument, 0,  AGGR },
         {"filename",   required_argument, 0,  'o' },
         {0,           0,                 0,  0   }
     };
 
     int long_index =0;
-    while ((opt = getopt_long(argc, argv,"h:d:c:f:", 
+    while ((opt = getopt_long(argc, argv,"h:d:c:f:q:", 
                    long_options, &long_index )) != -1) {
         switch (opt) {
              case 'h' : host = optarg;
@@ -46,6 +48,8 @@ main (int   argc, char *argv[]){
              case 'c' : collection_name = optarg; 
                  break;
              case 'f' : filename = optarg;
+                 break;
+             case 'q' : query = optarg;
                  break;
              case FIELDS: fields = optarg;
                  break;
@@ -104,7 +108,8 @@ main (int   argc, char *argv[]){
     TryOp(TabExtractHasTable(hExtract, sExtract, &bHasTable));
 
     if (!bHasTable) {
-        cursor = get_cursor(host, database, collection_name, fields, &collection_p, &client_p);
+        cursor = get_cursor(host, database, collection_name, query, fields, 
+                            &collection_p, &client_p);
         mongoc_cursor_next (cursor, &doc);
         jsstr = bson_as_json (doc, NULL);
         printf("Creating tde file: %ls\n", fname_w);
@@ -134,7 +139,8 @@ main (int   argc, char *argv[]){
     /* revert cursor to begining of query */
     //mongoc_cursor_t *cursor_copy;
     //cursor_copy = mongoc_cursor_clone (cursor);
-    cursor = get_cursor(host, database, collection_name, fields, &collection_p, &client_p);
+    cursor = get_cursor(host, database, collection_name, query, fields, 
+                        &collection_p, &client_p);
     /* do all the fun inserting data here ...*/
     while (mongoc_cursor_next (cursor, &doc)) {
         jsstr = bson_as_json (doc, NULL);

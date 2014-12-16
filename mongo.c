@@ -3,7 +3,9 @@
 
 /* get_one never returns _id */
 mongoc_cursor_t *
-get_cursor(char *host, char *db, char *collection_name, const char *json_fields, 
+get_cursor(char *host, char *db, char *collection_name, 
+           const char *json_query,
+           const char *json_fields, 
            mongoc_collection_t **collection_p,
            mongoc_client_t **client_p){
     mongoc_init();
@@ -15,6 +17,9 @@ get_cursor(char *host, char *db, char *collection_name, const char *json_fields,
 
     if (json_fields){
         bson_concat(fields, parse_json(json_fields));
+        }
+    if (json_query){
+        bson_concat(query, parse_json(json_query));
         }
     
     char *host_uri = malloc(10);
