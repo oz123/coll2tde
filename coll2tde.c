@@ -101,6 +101,12 @@ main (int   argc, char *argv[]){
      * aggregation should be given as json and converted to BSON with 
      * bson_new_from_json
      * mongoc_collection_aggregate should than be used to get a cursor
+     * aggregation_json should begin with pipeline and contain array of
+     * operations:
+     * { "pipeline" : [ { "$project" : { "name" : 1 } }, { "$group" : 
+     *                  { "_id" : "$name", "credit" : { "$sum" : 1 } } }
+     *                ] 
+     *  }
      * */
     TAB_TYPE *column_types = NULL;
     int ncol = 0;
@@ -108,8 +114,8 @@ main (int   argc, char *argv[]){
     TryOp(TabExtractHasTable(hExtract, sExtract, &bHasTable));
 
     if (!bHasTable) {
-        cursor = get_cursor(host, database, collection_name, query, fields, 
-                            &collection_p, &client_p);
+        cursor = get_cursor(host, database, collection_name, query, fields,  
+                            aggregation, &collection_p, &client_p);
         mongoc_cursor_next (cursor, &doc);
         jsstr = bson_as_json (doc, NULL);
         printf("Creating tde file: %ls\n", fname_w);
@@ -140,8 +146,9 @@ main (int   argc, char *argv[]){
     //mongoc_cursor_t *cursor_copy;
     //cursor_copy = mongoc_cursor_clone (cursor);
     cursor = get_cursor(host, database, collection_name, query, fields, 
-                        &collection_p, &client_p);
+                        aggregation, &collection_p, &client_p);
     /* do all the fun inserting data here ...*/
+    int r = 0;
     while (mongoc_cursor_next (cursor, &doc)) {
         jsstr = bson_as_json (doc, NULL);
         jsmntok_t *tokens = json_tokenise(jsstr);
@@ -149,7 +156,10 @@ main (int   argc, char *argv[]){
         extract_values(column_values, jsstr, tokens, &ncol);
         // insert_values adds a row, column_values is actually row values
         insert_values(column_values, column_types, hTable, ncol);
+        r++;
     }
+    
+    printf("Successfully inserted %d rows\n", r);
     
     TryOp(TabExtractClose(hExtract));
     /* bson_destroy(columns_bson);

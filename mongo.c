@@ -6,6 +6,7 @@ mongoc_cursor_t *
 get_cursor(char *host, char *db, char *collection_name, 
            const char *json_query,
            const char *json_fields, 
+           const char *json_aggregation,
            mongoc_collection_t **collection_p,
            mongoc_client_t **client_p){
     mongoc_init();
