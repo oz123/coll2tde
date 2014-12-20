@@ -13,25 +13,33 @@ get_cursor(char *host, char *db, char *collection_name,
     bson_t *query = NULL;
     bson_t *fields = NULL;
     query = bson_new ();
-    fields = bson_new ();
     fields = BCON_NEW("_id", BCON_INT32 (0));
-
-    if (json_fields){
-        bson_concat(fields, parse_json(json_fields));
-        }
-    if (json_query){
-        bson_concat(query, parse_json(json_query));
-        }
-    
+    mongoc_cursor_t *cursor;
     char *host_uri = malloc(10);
     strcpy(host_uri, "mongodb://");
     strcat(host_uri, host);  
     printf("Trying to connect to %s\n", host_uri);
-    mongoc_cursor_t *cursor;
     *client_p = mongoc_client_new(host_uri);
     *collection_p = mongoc_client_get_collection (*client_p, db, collection_name);
-    cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
-                                    0, 0, 0, query, fields, NULL);
+    
+    if (json_aggregation) {
+        bson_error_t error;
+        bson_t *pipeline = bson_new_from_json((unsigned char *)json_aggregation, -1, &error);
+        cursor = mongoc_collection_aggregate (*collection_p, MONGOC_QUERY_NONE, 
+                                              pipeline, NULL, NULL);
+    } else {
+    
+        if (json_fields){
+            bson_concat(fields, parse_json(json_fields));
+            }
+        if (json_query){
+            bson_concat(query, parse_json(json_query));
+            }
+        
+        cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
+                                        0, 0, 0, query, fields, NULL);
+    }
+    
     bson_destroy(query);
     bson_destroy(fields);
     return cursor;
