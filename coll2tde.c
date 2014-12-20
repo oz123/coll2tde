@@ -117,12 +117,8 @@ main (int   argc, char *argv[]){
     cursor = get_cursor(host, database, collection_name, query, fields,  
                         aggregation, &collection_p, &client_p);
     mongoc_cursor_next (cursor, &doc);
-    jsstr = bson_as_json (doc, NULL);
     if (!bHasTable) {
-        //wchar_t **column_values = malloc(tokens[0].size / 2 * sizeof(wchar_t*));
-        //printf("js: %s\n", jsstr);
-        //extract_values(column_values, jsstr, tokens, &ncol);
-        //ncol = 0;
+        jsstr = bson_as_json (doc, NULL);
         printf("Creating tde file: %ls\n", fname_w);
         /* Table does not exist; create it. */
         hTableDef = make_table_definition(jsstr, &column_types, &ncol);
@@ -136,19 +132,18 @@ main (int   argc, char *argv[]){
         get_columns(&column_types, hTableDef, &ncol);
     }
     
+    /* insert the first row */
     jsstr = bson_as_json (doc, NULL);
     jsmntok_t *tokens = json_tokenise(jsstr);
     wchar_t **column_values = malloc(tokens[0].size / 2 * sizeof(wchar_t*));
     extract_values(column_values, jsstr, tokens, &ncol);
     insert_values(column_values, column_types, hTable, ncol);
     r++;
-
-    printf("The length is %d\n", ncol);
-    /* do all the fun inserting data here ...*/
+    
+    /* insert the remaining rows */
     while (mongoc_cursor_next (cursor, &doc)) {
         jsstr = bson_as_json (doc, NULL);
         jsmntok_t *tokens = json_tokenise(jsstr);
-        //wchar_t **column_values = malloc(tokens[0].size / 2 * sizeof(wchar_t*));
         extract_values(column_values, jsstr, tokens, &ncol);
         // insert_values adds a row, column_values is actually row values
         insert_values(column_values, column_types, hTable, ncol);
@@ -158,8 +153,6 @@ main (int   argc, char *argv[]){
     printf("Successfully inserted %d rows\n", r);
     
     TryOp(TabExtractClose(hExtract));
-    /* bson_destroy(columns_bson);
-    bson_destroy(aggregation_bson); */
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection_p);
     mongoc_client_destroy(client_p);
