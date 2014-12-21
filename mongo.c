@@ -1,6 +1,13 @@
 #include "mongo.h"
 /* Wrap all mongodb stuff in a function */
 
+ /* aggregation_json should begin with pipeline and contain array of
+ * operations:
+ * { "pipeline" : [ { "$project" : { "name" : 1 } }, { "$group" : 
+ *                  { "_id" : "$name", "credit" : { "$sum" : 1 } } }
+ *                ] 
+ *  }
+ * */
 /* get_one never returns _id */
 mongoc_cursor_t *
 get_cursor(char *host, char *db, char *collection_name, 
@@ -30,10 +37,14 @@ get_cursor(char *host, char *db, char *collection_name,
     } else {
     
         if (json_fields){
-            bson_concat(fields, parse_json(json_fields));
+            bson_t *new_fields = parse_json(json_fields);
+            bson_concat(fields, new_fields);
+            bson_destroy(new_fields);
             }
         if (json_query){
-            bson_concat(query, parse_json(json_query));
+            bson_t *new_query = parse_json(json_query);
+            bson_concat(query, new_query);
+            bson_destroy(new_query);
             }
         
         cursor = mongoc_collection_find(*collection_p, MONGOC_QUERY_NONE, 
