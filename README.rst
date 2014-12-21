@@ -1,20 +1,7 @@
 coll2tde
 ========
 
-A command line utility to convert a mongodb collection to a TDE file.
-
-* WTF man?
-
-  I have the pleasure of working with a Bloatware called Tableau. It provides
-  horrible interface for doing things with mouse and data. 
-  This software has propriety format which is not documented, and my day job
-  requires creating those files from data found in MongoDB collections.
-
-  In my day job we are using the Tableau Python API for this purpose. It works, 
-  but in a very slow pace. 
-
-  This is an attempt to re-create those pesky TDE files using C. 
-
+A command line utility to convert a mongodb collection to Tableau DataExtract file.
 
 Installation
 ------------
@@ -32,6 +19,8 @@ Just type::
    $ make 
 
 And then install the binary coll2tde in your path. 
+ 
+   $ make install
 
 USAGE:
 ------
@@ -83,3 +72,6 @@ Some notes about the exported data
 The flags ``-q`` and ``--fields`` support all the syntax that MongoDB's ``find`` 
 method support. 
 
+One can also user the aggregation framework to manipulate the data before being 
+inserted to the DataExtract file. 
+Note that the options ``-a`` and ``-q`` are mutually exclusive. 
