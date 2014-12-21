@@ -18,12 +18,9 @@ jsmntok_t * json_tokenise(char *js)
     {
         n = n * 2 + 1;
         tokens = realloc(tokens, sizeof(jsmntok_t) * n);
-        //log_null(tokens);
         ret = jsmn_parse(&parser, js, strlen(js), tokens, n);
     }
 
-    // if (ret == JSMN_ERROR_INVAL)
-    //if (ret == JSMN_ERROR_PART)
 
     return tokens;
 }

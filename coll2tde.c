@@ -110,7 +110,9 @@ main (int argc, char *argv[]){
     ToTableauString(fname_w, sfname);
     ToTableauString(L"Extract", sExtract);
     TryOp(TabExtractCreate(&hExtract, sfname));
-
+    free(fname_w);
+    free(sfname);
+    free(filename);
      /* aggregation_json should begin with pipeline and contain array of
      * operations:
      * { "pipeline" : [ { "$project" : { "name" : 1 } }, { "$group" : 
@@ -157,6 +159,7 @@ main (int argc, char *argv[]){
     
     printf("Successfully inserted %d rows\n", r);
     TryOp(TabExtractClose(hExtract));
+    free(tokens);
     free(column_values);
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection_p);
