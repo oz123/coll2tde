@@ -53,9 +53,26 @@ void get_options(int argc, char *argv[], char **host, char **database,
              default: print_usage(); 
                  exit(EXIT_FAILURE);
         }
-
-
     }
+    
+    if ( *host == NULL || *database == NULL || *collection_name == NULL)  {
+        print_usage();
+        exit(EXIT_FAILURE);
+        }
+
+    /* if no file name is given the collection_name will be appended tde */
+    if (*filename == NULL) {
+        *filename = malloc(strlen(*collection_name));
+        strcpy(*filename, *collection_name);
+        strcat(*filename, ".tde");  
+    }
+    
+    if ( *query && *aggregation ) {
+        printf("Aggregation and query are mutually exclusive...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    
 }
 
 int
@@ -72,24 +89,6 @@ main (int argc, char *argv[]){
     
     get_options(argc, argv, &host, &database, &collection_name, &filename, 
             &fields, &query, &aggregation);
-
-    if ( host == NULL || database == NULL || collection_name == NULL)  {
-        print_usage();
-        exit(EXIT_FAILURE);
-    }
-    
-    if ( query && aggregation ) {
-        printf("Aggregation and query are mutually exclusive...\n");
-        exit(EXIT_FAILURE);
-    }
-    
-    /* if no file name is given the collection_name will be appended tde */
-    if (filename == NULL) {
-        filename = malloc(strlen(collection_name));
-        strcpy(filename, collection_name);
-        strcat(filename, ".tde");  
-    }
-
     
     mongoc_client_t *client_p;
     mongoc_collection_t *collection_p;
@@ -120,7 +119,6 @@ main (int argc, char *argv[]){
      *  }
      * */
     TryOp(TabExtractHasTable(hExtract, sExtract, &bHasTable));
-
     cursor = get_cursor(host, database, collection_name, query, fields,  
                         aggregation, &collection_p, &client_p);
     mongoc_cursor_next (cursor, &doc);
@@ -159,6 +157,7 @@ main (int argc, char *argv[]){
     
     printf("Successfully inserted %d rows\n", r);
     TryOp(TabExtractClose(hExtract));
+    free(column_values);
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection_p);
     mongoc_client_destroy(client_p);
