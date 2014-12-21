@@ -27,5 +27,8 @@ coll2tde: $(OBJS)
 		$(TDE_LIBS) $(TDE_LDFLAGS) $(JSMN) \
 		$(shell pkg-config --cflags --libs libmongoc-1.0) \
 
+install:
+	install coll2tde /usr/local/bin/coll2tde
+
 clean:
 	$(RM) $(OBJS) coll2tde
