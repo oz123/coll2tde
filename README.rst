@@ -78,3 +78,20 @@ Some notes about the exported data
     coll2tde -h localhost -d test -c test --aggregation '"{$project : ....}"'
 
  * Note that the options ``-a`` and ``-q`` are mutually exclusive. 
+
+ * Column types of DataExtract are static, the software tries to detect the types
+   of values stored in the database and make proper decision about which column
+   type to create. However if you have a record which has ``null`` it is
+   impossible to detect the type of the column with out skipping to a different 
+   record. Hence, try to refine your query such the first record give by the 
+   cursor does not contain nulls. If the record contains ``null``, e.g.::
+
+    { "name" : "matt", "last_name" : "simon", 
+    "registered" : { "$date" : 1389389420201 }, 
+    "credit" : 0, "posts" : null, "active" : true }
+
+   The software will exist with the following error::
+   
+    Found null in key [posts], can't understand which type to create... 
+
+   This behaviour might change in the future. 

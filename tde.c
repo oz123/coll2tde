@@ -309,7 +309,10 @@ parse_keys_values(wchar_t **column_names,
                         column_types[cv] = TAB_TYPE_Double;
                     } else if ((! strcmp("true", str)) || (! strcmp("false", str))) {
                         column_types[cv] = TAB_TYPE_Boolean;
-                    }  
+                    } else if (!( strcmp("null", str) )) {
+                        log_die("Found null in key [%ls], can't understand which type to create...", 
+                        column_names[cv]);
+                    }
                 }
                 
                 if (t->type == JSMN_STRING){
@@ -384,9 +387,11 @@ make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
     for (; *ncol < tokens[0].size / 2 ; *ncol = *ncol + 1){
         TableauWChar *colname = malloc(wcslen(column_names[*ncol])+1);
         ToTableauString(column_names[*ncol], colname);
+        printf("Trying to create column [%ls] type [%d]\n", column_names[*ncol],
+                column_types[*ncol]);
         TryOp(TabTableDefinitionAddColumn(hTableDef, colname, 
                     column_types[*ncol]));
-        printf("Successfully added column %ls with type %d\n", 
+        printf("Successfully added column [%ls] with type [%d]\n", 
                 column_names[*ncol], 
                 column_types[*ncol]);
     }
