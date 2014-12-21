@@ -95,3 +95,11 @@ Some notes about the exported data
     Found null in key [posts], can't understand which type to create... 
 
    This behaviour might change in the future. 
+ 
+ * When using aggregation your json should always explicitly contain a
+   pipeline and an arry of operations::
+
+    coll2tde ... -a  '{ "pipeline" : [ { "$project" : { "name" : 1 } }, { "$group" : 
+                       { "_id" : "$name", "credit" : { "$sum" : 1 } } }
+                      ]}'
+

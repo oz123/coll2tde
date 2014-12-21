@@ -110,16 +110,8 @@ main (int argc, char *argv[]){
     ToTableauString(fname_w, sfname);
     ToTableauString(L"Extract", sExtract);
     TryOp(TabExtractCreate(&hExtract, sfname));
-    free(fname_w);
     free(sfname);
     free(filename);
-     /* aggregation_json should begin with pipeline and contain array of
-     * operations:
-     * { "pipeline" : [ { "$project" : { "name" : 1 } }, { "$group" : 
-     *                  { "_id" : "$name", "credit" : { "$sum" : 1 } } }
-     *                ] 
-     *  }
-     * */
     TryOp(TabExtractHasTable(hExtract, sExtract, &bHasTable));
     cursor = get_cursor(host, database, collection_name, query, fields,  
                         aggregation, &collection_p, &client_p);
@@ -127,9 +119,11 @@ main (int argc, char *argv[]){
     if (!bHasTable) {
         jsstr = bson_as_json (doc, NULL);
         printf("Creating tde file: %ls\n", fname_w);
+        free(fname_w);
         /* Table does not exist; create it. */
         hTableDef = make_table_definition(jsstr, &column_types, &ncol);
         TryOp(TabExtractAddTable(hExtract, sExtract, hTableDef, &hTable));
+        puts("Successfully added table to file");
     } else {
         printf("Found existing file!\n");
         /* Open an existing table to add more rows. */
@@ -146,7 +140,6 @@ main (int argc, char *argv[]){
     extract_values(column_values, jsstr, tokens, &ncol);
     insert_values(column_values, column_types, hTable, ncol);
     r++;
-    
     /* insert the remaining rows */
     while (mongoc_cursor_next (cursor, &doc)) {
         jsstr = bson_as_json (doc, NULL);
