@@ -40,6 +40,7 @@ get_cursor(char *host, char *db, char *collection_name,
                                         0, 0, 0, query, fields, NULL);
     }
     
+    free(host_uri);
     bson_destroy(query);
     bson_destroy(fields);
     return cursor;

@@ -390,7 +390,9 @@ make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
                 column_names[*ncol], 
                 column_types[*ncol]);
     }
-    printf("Done with loop, %d\n", *ncol);
+    
+    free(column_names);
+    free(tokens);
     /* populate values which are passed by reference */
     *column_types_p = column_types;
     return hTableDef;
@@ -408,7 +410,6 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
     for (int i = 0; i < rec_size; i++) {
         
         if (! wcscmp(L"null", record_values[i])){
-            printf("Found null!\n");
             TryOp(TabRowSetNull(hRow, i));
             continue;
             }
@@ -433,6 +434,7 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                 
                 TryOp(TabRowSetInteger(hRow, i, val));
                 printf("Successfully inserted value %ld\n", val);
+                free(bs);
                 break;
 
            case 13: // TAB_TYPE_DateTime
@@ -442,20 +444,12 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                 memset(epoch, '\0', sizeof(epoch));
                 strncpy(epoch, ts+12, 10*sizeof(char));
                 gtime = convert_epoch_to_gmt(epoch);
-                /* char buf[255];
-                strftime(buf, sizeof(buf), "%c" , gtime);
-                puts(buf);
-                printf("gtime->tm_year %d\n", gtime->tm_year);
-                printf("gtime->tm_mon %d\n", gtime->tm_mon);
-                printf("gtime->tm_mday %d\n", gtime->tm_mday);
-                printf("gtime->tm_hour %d\n", gtime->tm_hour);
-                printf("gtime->tm_min %d\n", gtime->tm_min);
-                printf("gtime->tm_sec %d\n", gtime->tm_sec); */
                 TryOp(TabRowSetDateTime(hRow, i, 1900 + gtime->tm_year, 
                                         gtime->tm_mon + 1 , gtime->tm_mday, 
                                         gtime->tm_hour, gtime->tm_min, 
                                         gtime->tm_sec, 0));
                 /* Unfortunately, ctime is only accurate at the second level */
+                free(ts);
                 break;
             
            case 16: // TAB_TYPE_UnicodeString
