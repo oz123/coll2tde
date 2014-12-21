@@ -18,7 +18,7 @@ Just type::
 
    $ make 
 
-And then install the binary coll2tde in your path. 
+And then install the binary coll2tde in your path:: 
  
    $ make install
 
@@ -67,11 +67,14 @@ Some notes about the exported data
 
  * You can specify a query to limit the data exported, for example::
 
-   ./coll2tde -h localhost -d test -c test --query '{"credit": {"$gt" : 10}}'
+    ./coll2tde -h localhost -d test -c test --query '{"credit": {"$gt" : 10}}'
 
-The flags ``-q`` and ``--fields`` support all the syntax that MongoDB's ``find`` 
-method support. 
+   The flags ``-q`` and ``--fields`` support all the syntax that MongoDB's ``find`` 
+   method support. 
 
-One can also user the aggregation framework to manipulate the data before being 
-inserted to the DataExtract file. 
-Note that the options ``-a`` and ``-q`` are mutually exclusive. 
+ * One can also user the aggregation framework to manipulate the data before being 
+   inserted to the DataExtract file::
+
+    coll2tde -h localhost -d test -c test --aggregation '"{$project : ....}"'
+
+ * Note that the options ``-a`` and ``-q`` are mutually exclusive. 
