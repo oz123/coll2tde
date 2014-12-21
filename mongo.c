@@ -58,11 +58,3 @@ bson_t * parse_json(const char * json_fields){
     log_die("Error: something bad happend in parse_columns");
     return n_fields; // this should never be reached ...
 }
-
-bson_t * parse_aggregation(char * aggregation){
-
-    bson_t *aggregation_bson = NULL;
-    aggregation_bson = bson_new ();
-    
-    return aggregation_bson;
-}
