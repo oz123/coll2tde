@@ -6,6 +6,8 @@ JSMN=-Ljsmn/ -ljsmn
 
 OBJS=mongo.o tde.o json.o log.o
 
+PREFIX ?= /usr/local/bin 
+
 .PHONY: all clean coll2tde
 
 all: coll2tde
@@ -25,10 +27,10 @@ json.o: json.c
 coll2tde: $(OBJS)
 	$(CC) $(CFLAGS) -o coll2tde $(OBJS) coll2tde.c \
 		$(TDE_LIBS) $(TDE_LDFLAGS) $(JSMN) \
-		$(shell pkg-config --cflags --libs libmongoc-1.0) \
+		$(shell pkg-config --cflags --libs libmongoc-1.0) 
 
 install:
-	install coll2tde /usr/local/bin/coll2tde
+	install coll2tde $(PREFIX)/coll2tde
 
 clean:
 	$(RM) $(OBJS) coll2tde

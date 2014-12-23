@@ -20,7 +20,11 @@ Just type::
 
 And then install the binary coll2tde in your path:: 
  
-   $ make install
+   $ make install 
+
+You can optionally specify the PREFIX:
+
+    $ make PREFIX=/path/to/install install
 
 USAGE:
 ------
