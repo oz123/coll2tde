@@ -78,7 +78,7 @@ void get_options(int argc, char *argv[], char **host, char **database,
 int
 main (int argc, char *argv[]){
     
-
+    /* we could pack all these variables in a struct */
     char *host = NULL;
     char *database = NULL;
     char *collection_name = NULL;
@@ -133,26 +133,19 @@ main (int argc, char *argv[]){
         get_columns(&column_types, hTableDef, &ncol);
     }
     
-    /* insert the first row */
-    jsstr = bson_as_json (doc, NULL);
-    jsmntok_t *tokens = json_tokenise(jsstr);
-    wchar_t **column_values = malloc(tokens[0].size / 2 * sizeof(wchar_t*));
-    extract_values(column_values, jsstr, tokens, &ncol);
-    insert_values(column_values, column_types, hTable, ncol);
-    r++;
-    /* insert the remaining rows */
-    while (mongoc_cursor_next (cursor, &doc)) {
+    /* insert all the data to DataExtract file */
+    wchar_t **column_values = malloc(ncol * sizeof(wchar_t*));
+    
+    do {
         jsstr = bson_as_json (doc, NULL);
         jsmntok_t *tokens = json_tokenise(jsstr);
         extract_values(column_values, jsstr, tokens, &ncol);
-        // insert_values adds a row, column_values is actually row values
         insert_values(column_values, column_types, hTable, ncol);
         r++;
-    }
+    } while (mongoc_cursor_next (cursor, &doc)) ;
     
     printf("Successfully inserted %d rows\n", r);
     TryOp(TabExtractClose(hExtract));
-    free(tokens);
     free(column_values);
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection_p);
