@@ -30,13 +30,12 @@ wchar_t * char_to_wchar(char *str){
 /* check if a string is an integer or a float */
 int check_number(char *str, int * ival, double *fval){
     
-    typedef enum { ERR, INT, DOUBLE } parse_num;
-    
+    enum { ERR, INT, DOUBLE };
     char* to_convert = str;
     char* p = NULL;
     errno = 0;
     int val = strtol(str, &p, 0);
-
+    
     if (errno != 0)
         return ERR;// conversion failed (EINVAL, ERANGE)
 
