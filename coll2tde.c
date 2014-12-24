@@ -61,8 +61,10 @@ void get_options(int argc, char *argv[], char **host, char **database,
         }
 
     /* if no file name is given the collection_name will be appended tde */
-    if (*filename == NULL) {
-        *filename = malloc(strlen(*collection_name));
+    //*filename = (char*)realloc(*filename, strlen(*collection_name)*sizeof(char)+4);
+    //if (strlen(*filename) == 0 ) {
+    if (*filename == NULL ) {
+       *filename = (char*)realloc(*filename, strlen(*collection_name)*sizeof(char)+5);
         strcpy(*filename, *collection_name);
         strcat(*filename, ".tde");  
     }
@@ -110,11 +112,14 @@ main (int argc, char *argv[]){
     ToTableauString(fname_w, sfname);
     ToTableauString(L"Extract", sExtract);
     TryOp(TabExtractCreate(&hExtract, sfname));
+    
     free(sfname);
-    free(filename);
+    free(filename); 
+
     TryOp(TabExtractHasTable(hExtract, sExtract, &bHasTable));
     cursor = get_cursor(host, database, collection_name, query, fields,  
                         aggregation, &collection_p, &client_p);
+
     mongoc_cursor_next (cursor, &doc);
     if (!bHasTable) {
         jsstr = bson_as_json (doc, NULL);
