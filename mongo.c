@@ -22,13 +22,14 @@ get_cursor(char *host, char *db, char *collection_name,
     query = bson_new ();
     fields = BCON_NEW("_id", BCON_INT32 (0));
     mongoc_cursor_t *cursor = NULL;
-    
+    printf("Trying to connect to %s\n", host);
     *client_p = mongoc_client_new(host);
 
     if (!*client_p) {
-       log_die("Failed to parse URL!");
+       log_die("Failed to parse URI!");
     } 
-    printf("Trying to connect to %s\n", host);
+   
+    
     *collection_p = mongoc_client_get_collection (*client_p, db, collection_name);
     
     if (json_aggregation) {
