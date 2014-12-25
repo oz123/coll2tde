@@ -21,14 +21,14 @@ get_cursor(char *host, char *db, char *collection_name,
     bson_t *fields = NULL;
     query = bson_new ();
     fields = BCON_NEW("_id", BCON_INT32 (0));
-    mongoc_cursor_t *cursor;
-    char *host_uri = malloc(10+strlen(host)); 
-    char *base = "mongodb://";
-    strcpy(host_uri, base);
-    host_uri = (char*)realloc(host_uri, sizeof(char)*(strlen(host_uri)+strlen(host)));
-    strcat(host_uri, host);  
+    mongoc_cursor_t *cursor = NULL;
+    
+    *client_p = mongoc_client_new(host);
+
+    if (!*client_p) {
+       log_die("Failed to parse URL!");
+    } 
     printf("Trying to connect to %s\n", host);
-    *client_p = mongoc_client_new(host_uri);
     *collection_p = mongoc_client_get_collection (*client_p, db, collection_name);
     
     if (json_aggregation) {
@@ -53,7 +53,6 @@ get_cursor(char *host, char *db, char *collection_name,
                                         0, 0, 0, query, fields, NULL);
     }
     
-    free(host_uri);
     bson_destroy(query);
     bson_destroy(fields);
     return cursor;

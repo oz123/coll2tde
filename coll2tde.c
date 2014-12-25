@@ -119,7 +119,7 @@ main (int argc, char *argv[]){
     TryOp(TabExtractHasTable(hExtract, sExtract, &bHasTable));
     cursor = get_cursor(host, database, collection_name, query, fields,  
                         aggregation, &collection_p, &client_p);
-
+    
     mongoc_cursor_next (cursor, &doc);
     if (!bHasTable) {
         jsstr = bson_as_json (doc, NULL);
@@ -154,7 +154,8 @@ main (int argc, char *argv[]){
     free(column_values);
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection_p);
-    mongoc_client_destroy(client_p);
+    if (client_p)
+        mongoc_client_destroy(client_p);
     mongoc_cleanup();  
 
     return 0;
