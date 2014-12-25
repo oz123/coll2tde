@@ -22,10 +22,12 @@ get_cursor(char *host, char *db, char *collection_name,
     query = bson_new ();
     fields = BCON_NEW("_id", BCON_INT32 (0));
     mongoc_cursor_t *cursor;
-    char *host_uri = malloc(10);
-    strcpy(host_uri, "mongodb://");
+    char *host_uri = malloc(10+strlen(host)); 
+    char *base = "mongodb://";
+    strcpy(host_uri, base);
+    host_uri = (char*)realloc(host_uri, sizeof(char)*(strlen(host_uri)+strlen(host)));
     strcat(host_uri, host);  
-    printf("Trying to connect to %s\n", host_uri);
+    printf("Trying to connect to %s\n", host);
     *client_p = mongoc_client_new(host_uri);
     *collection_p = mongoc_client_get_collection (*client_p, db, collection_name);
     

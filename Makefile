@@ -1,4 +1,4 @@
-CFLAGS+=-Wall -Werror -std=gnu99 -O2 
+CFLAGS+=-Wall -Werror -std=gnu99 -O2 -g 
 LDFLAGS = -Wl,-rpath,$(LIBROOT)/dataextract
 TDE_LIBS=-L/usr/lib/dataextract -lDataExtract
 TDE_LDFLAGS=-Wl,-rpath=/usr/lib/dataextract
