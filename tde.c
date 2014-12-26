@@ -429,15 +429,18 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
            case 7:  // TAB_TYPE_Integer
                 /* printf("Will insert integer %ls!\n", record_values[i]);*/
                 errno = 0;
-                char *bs = (char*)malloc(wcslen(record_values[i]));
-                wcstombs(bs, record_values[i], strlen(bs));
-                char* p = NULL;
-                long val = strtol(bs, &p, 0);
+                int len = wcslen(record_values[i]);
+                char *bs = (char *)malloc(len+1);
+                int rv = wcstombs(bs, record_values[i], len*sizeof(wchar_t));
+                log_assert(rv != 0);
+                char* p;
+                long lval;
+                lval = strtol(bs, &p, 0);
                 if (errno != 0)
                     log_die("Failed to convert %ls", record_values[i]);// conversion failed (EINVAL, ERANGE)
                 
-                TryOp(TabRowSetInteger(hRow, i, val));
-                printf("Successfully inserted value %ld\n", val);
+                TryOp(TabRowSetInteger(hRow, i, lval));
+                printf("Successfully inserted value %ld\n", lval);
                 free(bs);
                 break;
 
