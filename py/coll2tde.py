@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-import dataextract
+import dataextract as tde
 import json
 import pymongo
 import argparse
@@ -36,8 +36,23 @@ class CollectionToTDE(object):
                    aggregation):
         pass
 
-    def get_or_create_table(self, filename, cursor):
+    def make_table_definition(record, column_types):
         pass
+
+    def get_or_create_table(self, filename, record, column_types):
+
+        extract = tde.Extract(filename)
+        if not extract.hasTable('Extract'):
+            # Table does not exist; create it
+            tableDef = self.make_table_definition(record, column_types)
+            table = extract.addTable('Extract', tableDef)
+        else:
+            # Open an existing table to add more rows
+            table = extract.openTable('Extract')
+
+        tableDef = table.getTableDefinition()
+
+        return table, tableDef, extract, column_types
 
     def insert_rows(self, table_def, filename, cursor):
         pass
