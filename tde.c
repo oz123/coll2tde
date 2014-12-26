@@ -384,7 +384,7 @@ make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
     TryOp(TabTableDefinitionSetDefaultCollation(hTableDef, 
                 TAB_COLLATION_en_US));
     for (; *ncol < tokens[0].size / 2 ; *ncol = *ncol + 1){
-        TableauWChar *colname = malloc(wcslen(column_names[*ncol])+1);
+        TableauWChar *colname = malloc(wcslen(column_names[*ncol])*sizeof(TableauWChar)+2);
         ToTableauString(column_names[*ncol], colname);
         printf("Trying to create column [%ls] type [%d]\n", column_names[*ncol],
                 column_types[*ncol]);
