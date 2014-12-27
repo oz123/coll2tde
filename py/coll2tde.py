@@ -29,16 +29,17 @@ import dataextract as tde
 import json
 import pymongo
 import argparse
+import sys
 
 
-u = ("Usage: coll2tde -h HOST -d DATABASE -c COLLECTION [-q QUERY][--fields "
+u = ("Usage: coll2tde -s SERVER -d DATABASE -c COLLECTION [-q QUERY][--fields "
      "FIELDS]"
      "[-a AGGREGATION] -f TDEFILE")
 
 
 def parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-h", "--host", help="server name", required=True)
+    parser.add_argument("-s", "--server", help="server name", required=True)
     parser.add_argument("-d", "--database", help="database",
                         required=True)
     parser.add_argument("-c", "--collection", help="collection name",
@@ -48,18 +49,29 @@ def parser():
     parser.add_argument("-a", "--aggregation", help="aggregation",
                         required=False)
 
+    return parser
+
 
 class CollectionToTDE(object):
 
     def __init__(self, args):
-        pass
+        self.host = args.server
+        self.db = args.database
+        self.collection = args.collection
 
     def open_tableau_file(self, fname):
         pass
 
     def get_cursor(self, host, database, collection, query, fields,
                    aggregation):
-        pass
+
+        mongurl = host
+        try:
+            client = pymongo.MongoClient(mongurl)
+            print client
+        except:
+            print "Could not parse mongo url"
+            sys.exit(2)
 
     def make_table_definition(record, column_types):
         pass
@@ -82,9 +94,12 @@ class CollectionToTDE(object):
     def insert_rows(self, table_def, filename, cursor):
         pass
 
+    def run(self):
+        self.get_cursor(self.host, self.db, self.collection, None, None, None)
 
-if '__name__' == '__main__':
 
-    args = parser.parse_args()
-    coll2tde = CollectionToTDE()
+if __name__ == '__main__':
+
+    args = parser().parse_args()
+    coll2tde = CollectionToTDE(args)
     coll2tde.run()
