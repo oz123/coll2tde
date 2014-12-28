@@ -144,15 +144,46 @@ class CollectionToTDE(object):
 
         return table, tableDef, fileHandle, column_types
 
-    def insert_rows(self, table_def, filename, cursor):
-        pass
+    def insert_row(self, table, tableDef, column_types, rec):
+
+        row = tde.Row(tableDef)
+        i = 0
+
+        if isinstance(rec['_id'], bson.objectid.ObjectId):
+            rec.pop('_id')
+
+        for k, v in rec.items():
+            t = column_types[i]
+            if t == tde.Type.BOOLEAN:
+                row.setBoolean(i, int(v))
+            elif t == tde.Type.INTEGER:
+                row.setInteger(i, v)
+            elif t == tde.Type.DOUBLE:
+                row.setDouble(i, v)
+            elif t == tde.Type.UNICODE_STRING:
+                row.setString(i, v)
+            elif t == tde.Type.DATETIME:
+                row.setDateTime(i, v.year, v.month, v.day, v.hour,
+                                v.minute, v.second, int(v.microsecond/10000))
+            elif not v:
+                row.setNull(i)
+
+            i += 1
+
+        # such an ugly API ... if you try to insert row after calling
+        # row.close() you'll get a segmentation fault
+        table.insert(row)
+        row.close()
 
     def run(self, args):
         cursor = self.get_cursor(self.host, self.db, self.collection,
                                  args.query,
                                  args.fields, args.aggregation)
         rec = cursor.next()
-        self.get_or_create_table('test.tde', rec)
+        table, tableDef, fileHandle, column_types = self.get_or_create_table(
+            'test.tde', rec)
+
+        self.insert_row(table, tableDef, column_types, rec)
 
 if __name__ == '__main__':
 
