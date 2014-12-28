@@ -25,12 +25,12 @@ this program is to help benchmarking the C program, and provide a test bed for
 quickly prototyping new features.
 """
 
-import dataextract as tde
 import json
-import pymongo
-import argparse
 import sys
-
+import datetime
+import argparse
+import pymongo
+import dataextract as tde
 
 u = ("Usage: coll2tde -s SERVER -d DATABASE -c COLLECTION [-q QUERY][--fields "
      "FIELDS]"
@@ -38,7 +38,7 @@ u = ("Usage: coll2tde -s SERVER -d DATABASE -c COLLECTION [-q QUERY][--fields "
 
 
 def parser():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(usage=u)
 
     parser.add_argument("-s", "--server", help="server name", required=True)
     parser.add_argument("-d", "--database", help="database",
@@ -106,23 +106,42 @@ class CollectionToTDE(object):
 
         return cursor
 
-    def make_table_definition(record, column_types):
-        pass
+    def make_table_definition(record, column_types, column_names, fileHandle):
+
+        for k, v in record.iteritems():
+            column_names.append(k)
+            if isinstance(v, int):
+                column_types.append(tde.Type.INTEGER)
+            elif isinstance(v, float):
+                column_types.append(tde.Type.DOUBLE)
+            elif isinstance(v, unicode):
+                column_types.append(tde.Type.UNICODE_STRING)
+            elif isinstance(v, bool):
+                column_types.append(tde.Type.BOOLEAN)
+            elif isinstance(v, datetime.datetime):
+                column_types.append(tde.Type.DATETIME)
+            else:
+                print "Found unknown type! values is of %s" % v.__class__
+                sys.exit()
 
     def get_or_create_table(self, filename, record, column_types):
 
-        extract = tde.Extract(filename)
-        if not extract.hasTable('Extract'):
+        fileHandle = tde.Extract(filename)
+        column_names = []
+        column_types = []
+
+        if not fileHandle.hasTable('Extract'):
             # Table does not exist; create it
-            tableDef = self.make_table_definition(record, column_types)
-            table = extract.addTable('Extract', tableDef)
+            tableDef = self.make_table_definition(record, column_types,
+                                                  column_names, fileHandle)
+            table = fileHandle.addTable('Extract', tableDef)
         else:
             # Open an existing table to add more rows
-            table = extract.openTable('Extract')
+            table = fileHandle.openTable('Extract')
 
         tableDef = table.getTableDefinition()
 
-        return table, tableDef, extract, column_types
+        return table, tableDef, fileHandle, column_types
 
     def insert_rows(self, table_def, filename, cursor):
         pass
