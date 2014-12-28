@@ -39,15 +39,16 @@ u = ("Usage: coll2tde -s SERVER -d DATABASE -c COLLECTION [-q QUERY][--fields "
 
 def parser():
     parser = argparse.ArgumentParser()
+
     parser.add_argument("-s", "--server", help="server name", required=True)
     parser.add_argument("-d", "--database", help="database",
                         required=True)
     parser.add_argument("-c", "--collection", help="collection name",
                         required=True)
     parser.add_argument("-q", "--query", help="query", required=False)
-    parser.add_argument("-f", "--field", help="field names", required=False)
     parser.add_argument("-a", "--aggregation", help="aggregation",
                         required=False)
+    parser.add_argument("-f", "--fields", help="field names", required=False)
 
     return parser
 
@@ -58,6 +59,7 @@ class CollectionToTDE(object):
         self.host = args.server
         self.db = args.database
         self.collection = args.collection
+        self.args = args
 
     def open_tableau_file(self, fname):
         pass
@@ -72,6 +74,37 @@ class CollectionToTDE(object):
         except:
             print "Could not parse mongo url"
             sys.exit(2)
+
+        db = client[database]
+        collection = db[collection]
+
+        if not aggregation:
+
+            if not query:
+                query = {}
+            else:
+                try:
+                    query = json.loads(query)
+                except ValueError:
+                    print "could not understand your query ..."
+                    sys.exit()
+
+            if not fields:
+                fields = {}
+            else:
+                try:
+                    fields = json.loads(fields)
+                except ValueError:
+                    print "could not understand your fields ..."
+                    sys.exit()
+
+            cursor = collection.find(query, fields)
+
+        else:
+
+            cursor = collection.aggregate(aggregation)
+
+        return cursor
 
     def make_table_definition(record, column_types):
         pass
@@ -94,12 +127,19 @@ class CollectionToTDE(object):
     def insert_rows(self, table_def, filename, cursor):
         pass
 
-    def run(self):
-        self.get_cursor(self.host, self.db, self.collection, None, None, None)
+    def run(self, args):
+        self.get_cursor(self.host, self.db, self.collection, args.query,
+                        args.fields, args.aggregation)
 
 
 if __name__ == '__main__':
 
     args = parser().parse_args()
+
+    print args.aggregation
+    if args.aggregation and (args.query or args.fields):
+        print "Aggregation and Qurey are mutually exclusive ..."
+        sys.exit(2)
+
     coll2tde = CollectionToTDE(args)
-    coll2tde.run()
+    coll2tde.run(args)
