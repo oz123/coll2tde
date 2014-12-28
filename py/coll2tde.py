@@ -30,6 +30,7 @@ import sys
 import datetime
 import argparse
 import pymongo
+import bson
 import dataextract as tde
 
 u = ("Usage: coll2tde -s SERVER -d DATABASE -c COLLECTION [-q QUERY][--fields "
@@ -79,52 +80,51 @@ class CollectionToTDE(object):
         collection = db[collection]
 
         if not aggregation:
-
-            if not query:
-                query = {}
-            else:
-                try:
-                    query = json.loads(query)
-                except ValueError:
-                    print "could not understand your query ..."
-                    sys.exit()
-
-            if not fields:
-                fields = {}
-            else:
-                try:
-                    fields = json.loads(fields)
-                except ValueError:
-                    print "could not understand your fields ..."
-                    sys.exit()
+            for k, v in {'query': query, 'fields': fields}.items():
+                if v:
+                    try:
+                        k = json.loads(v)
+                    except ValueError:
+                        print "could not understand your %s ..." % k
+                        sys.exit()
 
             cursor = collection.find(query, fields)
-
         else:
-
             cursor = collection.aggregate(aggregation)
 
         return cursor
 
-    def make_table_definition(record, column_types, column_names, fileHandle):
+    def make_table_definition(self, record, column_types, column_names,
+                              fileHandle):
+
+        tableDef = tde.TableDefinition()
 
         for k, v in record.iteritems():
-            column_names.append(k)
-            if isinstance(v, int):
+            if isinstance(v, bson.objectid.ObjectId):
+                continue
+            elif isinstance(v, int):
                 column_types.append(tde.Type.INTEGER)
+                tableDef.addColumn(k, tde.Type.INTEGER)
             elif isinstance(v, float):
                 column_types.append(tde.Type.DOUBLE)
+                tableDef.addColumn(k, tde.Type.DOUBLE)
             elif isinstance(v, unicode):
                 column_types.append(tde.Type.UNICODE_STRING)
+                tableDef.addColumn(k, tde.Type.UNICODE_STRING)
             elif isinstance(v, bool):
                 column_types.append(tde.Type.BOOLEAN)
+                tableDef.addColumn(k, tde.Type.BOOLEAN)
             elif isinstance(v, datetime.datetime):
                 column_types.append(tde.Type.DATETIME)
+                tableDef.addColumn(k, tde.Type.DATETIME)
             else:
                 print "Found unknown type! values is of %s" % v.__class__
                 sys.exit()
+            column_names.append(k)
 
-    def get_or_create_table(self, filename, record, column_types):
+        return tableDef
+
+    def get_or_create_table(self, filename, record):
 
         fileHandle = tde.Extract(filename)
         column_names = []
@@ -135,6 +135,7 @@ class CollectionToTDE(object):
             tableDef = self.make_table_definition(record, column_types,
                                                   column_names, fileHandle)
             table = fileHandle.addTable('Extract', tableDef)
+            print column_types, column_names
         else:
             # Open an existing table to add more rows
             table = fileHandle.openTable('Extract')
@@ -147,9 +148,11 @@ class CollectionToTDE(object):
         pass
 
     def run(self, args):
-        self.get_cursor(self.host, self.db, self.collection, args.query,
-                        args.fields, args.aggregation)
-
+        cursor = self.get_cursor(self.host, self.db, self.collection,
+                                 args.query,
+                                 args.fields, args.aggregation)
+        rec = cursor.next()
+        self.get_or_create_table('test.tde', rec)
 
 if __name__ == '__main__':
 
