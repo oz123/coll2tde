@@ -135,12 +135,14 @@ class CollectionToTDE(object):
             tableDef = self.make_table_definition(record, column_types,
                                                   column_names, fileHandle)
             table = fileHandle.addTable('Extract', tableDef)
-            print column_types, column_names
+
         else:
             # Open an existing table to add more rows
             table = fileHandle.openTable('Extract')
-
-        tableDef = table.getTableDefinition()
+            tableDef = table.getTableDefinition()
+            for i in range(tableDef.getColumnCount()):
+                column_types.append(tableDef.getColumnType(i))
+                column_names.append(tableDef.getColumnName(i))
 
         return table, tableDef, fileHandle, column_types
 
