@@ -156,7 +156,9 @@ class CollectionToTDE(object):
 
         for k, v in rec.items():
             t = column_types[i]
-            if t == tde.Type.BOOLEAN:
+            if not v:
+                row.setNull(i)
+            elif t == tde.Type.BOOLEAN:
                 row.setBoolean(i, int(v))
             elif t == tde.Type.INTEGER:
                 row.setInteger(i, v)
@@ -167,8 +169,6 @@ class CollectionToTDE(object):
             elif t == tde.Type.DATETIME:
                 row.setDateTime(i, v.year, v.month, v.day, v.hour,
                                 v.minute, v.second, int(v.microsecond/10000))
-            elif not v:
-                row.setNull(i)
 
             i += 1
 
@@ -185,7 +185,18 @@ class CollectionToTDE(object):
         table, tableDef, fileHandle, column_types = self.get_or_create_table(
             'test.tde', rec)
 
-        self.insert_row(table, tableDef, column_types, rec)
+        r = 0;
+
+        while True:
+            self.insert_row(table, tableDef, column_types, rec)
+            r += 1
+            try:
+                rec = cursor.next()
+            except StopIteration:
+                break
+
+        print "Successfully inserted %d rows." % r
+
 
 if __name__ == '__main__':
 
