@@ -1,0 +1,28 @@
+[
+    { "username": "oz123", 
+      "first name": "Oz",
+      "last name": "Tiram",
+      "Posts": [],
+      "Credit": 0, 
+      "last-login": "2014-12-12"
+    },
+    
+    { "username": "foo", 
+      "first name": "Foo",
+      "last name": "Bar",
+      "Posts": [
+          {
+              "Title" : "Check this out!",
+              "Content": "some cool content",
+              "upvotes": 12
+          },
+          {
+              "Title" : "Another link to share",
+              "Content": "url to share",
+              "upvotes": 2
+          }
+      ],
+      "Credit": 0, 
+      "last-login": "2015-01-03"
+    }
+]
