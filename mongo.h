@@ -22,6 +22,7 @@
 #pragma once
 
 #include <mongoc.h>
+#include <bson.h>
 #include "log.h"
 
 mongoc_cursor_t *

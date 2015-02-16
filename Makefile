@@ -20,7 +20,9 @@ tde.o: tde.c
 
 mongo.o: mongo.c
 	$(CC) $(CFLAGS) -c mongo.c \
-		$(shell pkg-config --cflags --libs libmongoc-1.0) 
+		$(shell pkg-config --cflags --libs libmongoc-1.0) \
+ 		$(shell pkg-config --cflags --libs libbson-1.0)
+
 json.o: json.c
 	$(CC) $(CFLAGS) -c json.c $(JSMN)
 
