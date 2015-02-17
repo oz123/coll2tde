@@ -28,6 +28,7 @@
 #include <wchar.h>
 #include <time.h>
 #include <regex.h>
+#include <bson.h>
 #include "DataExtract.h"
 #include "log.h"
 #include "jsmn/jsmn.h"

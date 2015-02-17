@@ -16,7 +16,8 @@ log.o: log.c
 	$(CC) $(CFLAGS) -c log.c 
 
 tde.o: tde.c
-	$(CC) $(CFLAGS) -c tde.c $(TDE_LIBS) $(TDE_LDFLAGS) 
+	$(CC) $(CFLAGS) -c tde.c $(TDE_LIBS) $(TDE_LDFLAGS) \
+		$(shell pkg-config --cflags --libs libbson-1.0)
 
 mongo.o: mongo.c
 	$(CC) $(CFLAGS) -c mongo.c \
