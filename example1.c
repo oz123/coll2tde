@@ -34,6 +34,8 @@ main (int   argc,
             while (bson_iter_next (&iter)) {
                 printf ("Found element key: \"%s\"\n", bson_iter_key (&iter));
                 value = bson_iter_value(&iter);
+                /* change this to switch ... case ...
+                 * I've be doing python too ... long ...*/
                 if ((*value).value_type == BSON_TYPE_UTF8) {
                     printf("(UTF-8)\nThe value is %s\n", (*value).value.v_utf8.str);
                 } else if ((*value).value_type == BSON_TYPE_DOCUMENT ||
