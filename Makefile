@@ -36,3 +36,9 @@ install:
 
 clean:
 	$(RM) $(OBJS) coll2tde
+
+example1: example1.c
+	$(CC) -o example1 example1.c \
+		$(shell pkg-config --cflags --libs libmongoc-1.0) \
+		$(shell pkg-config --cflags --libs libbson-1.0)
+
