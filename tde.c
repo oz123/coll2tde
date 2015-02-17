@@ -1,4 +1,4 @@
-/* 
+/*
  * This file is part of coll2tde.
  *
  * coll2tde is free software; you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with coll2tde; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- * 
+ *
  * ============================================================================
  * Copyright (C) 2014 Oz Nahum Tiram <nahumoz@gmail.com>
  * ============================================================================
@@ -27,7 +27,7 @@
 #define FORMAT_DATETIME "%Y-%m-%d %H:%M:%S"
 #define FORMAT_DATE     "%Y-%m-%d"
 
-/* 
+/*
  * Should be able to query like this ...
 "{$project: {_id:0, "hobbies":1}}, {$unwind : "$hobbies"}, {$limit:1}"
  */
@@ -42,13 +42,13 @@ wchar_t * char_to_wchar(char *str){
 
 /* check if a string is an integer or a float */
 int check_number(char *str, int * ival, double *fval){
-    
+
     enum { ERR, INT, DOUBLE };
     char* to_convert = str;
     char* p = NULL;
     errno = 0;
     int val = strtol(str, &p, 0);
-    
+
     if (errno != 0)
         return ERR;// conversion failed (EINVAL, ERANGE)
 
@@ -69,9 +69,9 @@ int check_number(char *str, int * ival, double *fval){
            return ERR;
            }
         *fval = val2;
-        return DOUBLE; 
+        return DOUBLE;
         }
-    
+
     *ival = val;
     return INT;
 }
@@ -131,12 +131,12 @@ struct tm* convert_epoch_to_gmt(char * epoch){
 /*
  * Get valeus and store them in string array
  */
-void 
-extract_values(wchar_t **column_values, 
-               char *js, 
-               jsmntok_t *tokens, 
+void
+extract_values(wchar_t **column_values,
+               char *js,
+               jsmntok_t *tokens,
                int *ncol){
-    
+
     int rv = -999;
     typedef enum { START, KEY, VALUE, SKIP, STOP, INCR } parse_state;
     parse_state state = START;
@@ -174,7 +174,7 @@ extract_values(wchar_t **column_values,
                 if (t->type != JSMN_STRING)
                     log_die("Invalid response: object keys must be strings.");
                     state = SKIP;
-                
+
                 if (i % 2) {
                     state = VALUE;
                 }
@@ -201,19 +201,19 @@ extract_values(wchar_t **column_values,
                     state = SKIP;
                     break;
                 }
-                
+
                 if (t->type == JSMN_PRIMITIVE){
                     str = json_token_tostr(js, t);
                     column_values[cv] = char_to_wchar(str);
                 }
-                
+
                 if (t->type == JSMN_STRING){
                     str = json_token_tostr(js, t);
                     column_values[cv] = char_to_wchar(str);
                 }
-                
+
                 state = INCR;
-            
+
             case INCR:
                 cv++;
                 object_tokens--;
@@ -223,7 +223,7 @@ extract_values(wchar_t **column_values,
                 break;
 
             case STOP:
-                // Just consume the tokens 
+                // Just consume the tokens
                 break;
 
             default:
@@ -234,15 +234,25 @@ extract_values(wchar_t **column_values,
     *ncol = (int) cv;
 }
 
+
 /*
  * Get keys and types and store them in string arrays
  */
-void 
-parse_keys_values(wchar_t **column_names,  
+void get_keys_values(wchar_t **column_names, TAB_TYPE *column_types,
+                     const bson_t *doc){
+
+// TODO implement this ...
+}
+
+/*
+ * Get keys and types and store them in string arrays
+ */
+void
+parse_keys_values(wchar_t **column_names,
                   TAB_TYPE *column_types,
-                  char *js, 
+                  char *js,
                   jsmntok_t *tokens){
-    
+
     int rv = -999;
     typedef enum { START, KEY, VALUE, SKIP, STOP, INCR } parse_state;
     parse_state state = START;
@@ -279,7 +289,7 @@ parse_keys_values(wchar_t **column_names,
                 if (t->type != JSMN_STRING)
                     log_die("Invalid response: object keys must be strings.");
                     state = SKIP;
-                
+
                 if (i % 2) {
                     str = json_token_tostr(js, t);
                     column_names[cn] = char_to_wchar(str);
@@ -301,7 +311,7 @@ parse_keys_values(wchar_t **column_names,
                 break;
 
             case VALUE:
-                
+
                 if (t->type == JSMN_OBJECT){
                     rv = check_date(js, t);
                     if (! rv )
@@ -309,7 +319,7 @@ parse_keys_values(wchar_t **column_names,
                     state = SKIP;
                     break;
                 }
-                
+
                 if (t->type == JSMN_PRIMITIVE){
                     str = json_token_tostr(js, t);
                     int ival = 0;
@@ -322,18 +332,18 @@ parse_keys_values(wchar_t **column_names,
                     } else if ((! strcmp("true", str)) || (! strcmp("false", str))) {
                         column_types[cv] = TAB_TYPE_Boolean;
                     } else if (!( strcmp("null", str) )) {
-                        log_die("Found null in key [%ls], can't understand which type to create...", 
+                        log_die("Found null in key [%ls], can't understand which type to create...",
                         column_names[cv]);
                     }
                 }
-                
+
                 if (t->type == JSMN_STRING){
                     str = json_token_tostr(js, t);
                     column_types[cv] = TAB_TYPE_UnicodeString;
                 }
-                
+
                 state = INCR;
-            
+
             case INCR:
                 cv++;
                 object_tokens--;
@@ -343,7 +353,7 @@ parse_keys_values(wchar_t **column_names,
                 break;
 
             case STOP:
-                // Just consume the tokens 
+                // Just consume the tokens
                 break;
 
             default:
@@ -354,11 +364,11 @@ parse_keys_values(wchar_t **column_names,
 
 
 /*
- * Detect type from string 
+ * Detect type from string
  */
 
 int string_to_type(char *str){
-   
+
     struct tm tm;
     memset(&tm, 0, sizeof(struct tm));
     char *rv = NULL;
@@ -370,7 +380,7 @@ int string_to_type(char *str){
         DATE_FORMAT = "%Y-%m-%d";
 
     rv = strptime(str, DATETIME_FORMAT, &tm);
-    /* if rv is NULL then  
+    /* if rv is NULL then
      * it failed in parsing the time */
     if (rv != NULL) {
         return TAB_TYPE_DateTime;
@@ -383,7 +393,7 @@ int string_to_type(char *str){
 }
 
 /* Define the table's schema */
-TAB_HANDLE 
+TAB_HANDLE
 make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
 
     jsmntok_t *tokens = json_tokenise(js);
@@ -391,23 +401,23 @@ make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
     wchar_t **column_names = malloc( tokens[0].size / 2 * sizeof(wchar_t*));
     TAB_TYPE *column_types = malloc(tokens[0].size /2 * sizeof(TAB_TYPE));
     parse_keys_values(column_names, column_types, js, tokens);
-    
+
     TAB_HANDLE hTableDef;
     TryOp(TabTableDefinitionCreate(&hTableDef));
-    TryOp(TabTableDefinitionSetDefaultCollation(hTableDef, 
+    TryOp(TabTableDefinitionSetDefaultCollation(hTableDef,
                 TAB_COLLATION_en_US));
     for (; *ncol < tokens[0].size / 2 ; *ncol = *ncol + 1){
         TableauWChar *colname = malloc(wcslen(column_names[*ncol])*sizeof(TableauWChar)+2);
         ToTableauString(column_names[*ncol], colname);
         printf("Trying to create column [%ls] type [%d]\n", column_names[*ncol],
                 column_types[*ncol]);
-        TryOp(TabTableDefinitionAddColumn(hTableDef, colname, 
+        TryOp(TabTableDefinitionAddColumn(hTableDef, colname,
                     column_types[*ncol]));
-        printf("Successfully added column [%ls] with type [%d]\n", 
-                column_names[*ncol], 
+        printf("Successfully added column [%ls] with type [%d]\n",
+                column_names[*ncol],
                 column_types[*ncol]);
     }
-    
+
     free(column_names);
     free(tokens);
     /* populate values which are passed by reference */
@@ -416,16 +426,16 @@ make_table_definition(char *js, TAB_TYPE **column_types_p, int *ncol){
 }
 
 
-void insert_values(wchar_t **record_values, TAB_TYPE *column_types, 
+void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
         TAB_HANDLE *hTable, int rec_size){
-    
+
     TAB_HANDLE hRow;
     TAB_HANDLE hTableDef;
     TryOp(TabTableGetTableDefinition(hTable, &hTableDef));
     TryOp(TabRowCreate(&hRow, hTableDef));
-    
+
     for (int i = 0; i < rec_size; i++) {
-        
+
         if (! wcscmp(L"null", record_values[i])){
             TryOp(TabRowSetNull(hRow, i));
             continue;
@@ -433,12 +443,12 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
         int coltype = column_types[i];
         char epoch[11];
         struct tm *gtime;
-        char *ts; 
+        char *ts;
         TableauWChar *value;
 
         switch (coltype)
         {
-        
+
            case 7:  // TAB_TYPE_Integer
                 /* printf("Will insert integer %ls!\n", record_values[i]);*/
                 errno = 0;
@@ -451,27 +461,27 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                 lval = strtol(bs, &p, 0);
                 if (errno != 0)
                     log_die("Failed to convert %ls", record_values[i]);// conversion failed (EINVAL, ERANGE)
-                
+
                 TryOp(TabRowSetInteger(hRow, i, lval));
                 printf("Successfully inserted value %ld\n", lval);
                 free(bs);
                 break;
 
            case 13: // TAB_TYPE_DateTime
-                printf("Will insert datetime %ls!\n", record_values[i]); 
+                printf("Will insert datetime %ls!\n", record_values[i]);
                 ts = malloc(wcslen(record_values[i]));
                 wcstombs(ts, record_values[i], wcslen(record_values[i]));
                 memset(epoch, '\0', sizeof(epoch));
                 strncpy(epoch, ts+12, 10*sizeof(char));
                 gtime = convert_epoch_to_gmt(epoch);
-                TryOp(TabRowSetDateTime(hRow, i, 1900 + gtime->tm_year, 
-                                        gtime->tm_mon + 1 , gtime->tm_mday, 
-                                        gtime->tm_hour, gtime->tm_min, 
+                TryOp(TabRowSetDateTime(hRow, i, 1900 + gtime->tm_year,
+                                        gtime->tm_mon + 1 , gtime->tm_mday,
+                                        gtime->tm_hour, gtime->tm_min,
                                         gtime->tm_sec, 0));
                 /* Unfortunately, ctime is only accurate at the second level */
                 free(ts);
                 break;
-            
+
            case 16: // TAB_TYPE_UnicodeString
                 printf("Will insert double  %ls!\n", record_values[i]);
                 value = malloc(wcslen(record_values[i])*sizeof(TableauWChar)+2);
@@ -480,13 +490,13 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                 free(value);
                 break;
 
-           case 10: // TAB_TYPE_Double 
+           case 10: // TAB_TYPE_Double
                 printf("Will insert double  %ls!\n", record_values[i]);
                 wchar_t *stopwcs;
                 double valf = wcstold(record_values[i], &stopwcs);
-                TryOp(TabRowSetDouble(hRow, i, valf));                   
+                TryOp(TabRowSetDouble(hRow, i, valf));
                 break;
-           
+
            case 11: // TAB_TYPE_Boolean
                 printf("Will insert boolean  %ls!\n", record_values[i]);
                 if (! wcscmp(record_values[i], L"true")) {
@@ -497,7 +507,7 @@ void insert_values(wchar_t **record_values, TAB_TYPE *column_types,
                 log_die("Unknown boolean value ... %ls\n", record_values[i]);
                 }
                 break;
-           
+
            default:
                 log_die("Unknown tabeleau type...");
         }
@@ -523,7 +533,7 @@ void get_columns(TAB_TYPE **column_types_p, TAB_HANDLE hTableDef, int *ncols){
         printf("Got column %d type %d\n", i, type);
         column_types[i] = type;
     }
-    
+
     *column_types_p = column_types;
     *ncols = numColumns;
 }
