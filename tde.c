@@ -32,7 +32,7 @@
 "{$project: {_id:0, "hobbies":1}}, {$unwind : "$hobbies"}, {$limit:1}"
  */
 
-wchar_t * char_to_wchar(char *str){
+wchar_t * char_to_wchar(const char *str){
 
     wchar_t *str_w = calloc(strlen(str) + 1, sizeof(wchar_t));
     mbstowcs(str_w, str, strlen(str)+1);
@@ -240,8 +240,34 @@ extract_values(wchar_t **column_values,
  */
 void get_keys_values(wchar_t **column_names, TAB_TYPE *column_types,
                      const bson_t *doc){
+    bson_iter_t iter;
+    const bson_value_t *value;
+    int cn = 0;
+    int ct = 0;
 
-// TODO implement this ...
+    if (bson_iter_init (&iter, doc)) {
+        while (bson_iter_next (&iter)) {
+            column_names[cn] = char_to_wchar(bson_iter_key(&iter));
+            cn++;
+            value = bson_iter_value(&iter);
+
+            switch ((*value).value_type){
+                case BSON_TYPE_UTF8:
+                    column_types[ct] = TAB_TYPE_UnicodeString;
+                    ct++;
+                    break;
+                case BSON_TYPE_INT32:
+                case BSON_TYPE_INT64:
+                    column_types[ct] = TAB_TYPE_Integer;
+                    ct++;
+                    break;
+                default:
+                    break;
+
+            }
+
+        }
+    }
 }
 
 /*
