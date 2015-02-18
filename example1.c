@@ -34,23 +34,31 @@ main (int   argc,
             while (bson_iter_next (&iter)) {
                 printf ("Found element key: \"%s\"\n", bson_iter_key (&iter));
                 value = bson_iter_value(&iter);
+                switch ((*value).value_type){
+                case BSON_TYPE_UTF8:
+                    printf("(UTF-8)\nThe value is %s\n", (*value).value.v_utf8.str);
+                    break;
+                case BSON_TYPE_DOCUMENT:
+                case BSON_TYPE_ARRAY:
+                    printf("buah! exploding with loud crash, a table can't tollerate document or array as a value!\n");
+                    break;
                 /* change this to switch ... case ...
                  * I've be doing python too ... long ...*/
-                if ((*value).value_type == BSON_TYPE_UTF8) {
-                    printf("(UTF-8)\nThe value is %s\n", (*value).value.v_utf8.str);
-                } else if ((*value).value_type == BSON_TYPE_DOCUMENT ||
-                            (*value).value_type == BSON_TYPE_ARRAY) {
-                    /* we can properly detect array and documents too ...*/
-                    printf("buah! exploding with loud crash, a table can't tollerate document or array as a value!\n");
-                } else if ((*value).value_type == BSON_TYPE_OID) {
+                //if ((*value).value_type == BSON_TYPE_UTF8) {
+                //    printf("(UTF-8)\nThe value is %s\n", (*value).value.v_utf8.str);
+                //} else if ((*value).value_type == BSON_TYPE_DOCUMENT ||
+                //           (*value).value_type == BSON_TYPE_ARRAY) {
+                //    /* we can properly detect array and documents too ...*/
+                //    printf("buah! exploding with loud crash, a table can't tollerate document or array as a value!\n");
+                //} else if ((*value).value_type == BSON_TYPE_OID) {
                 /* ignore objectid */
-                printf("dying silently on oid...\n");
+                //printf("dying silently on oid...\n");
+                //}
                 }
             }
-        }
         bson_free(str);
+        }
     }
-
     bson_destroy (query);
     mongoc_cursor_destroy (cursor);
     mongoc_collection_destroy (collection);
