@@ -50,3 +50,7 @@ example1: example1.c
 		$(shell pkg-config --cflags --libs libmongoc-1.0) \
 		$(shell pkg-config --cflags --libs libbson-1.0)
 
+iter_all: iter_all.c
+	$(CC) -o iter_all iter_all.c \
+		$(shell pkg-config --cflags --libs libmongoc-1.0) \
+		$(shell pkg-config --cflags --libs libbson-1.0)
