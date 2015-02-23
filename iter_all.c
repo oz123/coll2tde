@@ -3,6 +3,47 @@
 #include <stdio.h>
 
 
+bson_iter_t * iter_recursively(bson_iter_t *doc){
+
+    bson_iter_t sub_iter;
+    const bson_value_t * value;
+    printf ("embeded key! %s\n", bson_iter_key (doc));
+    value = bson_iter_value(doc);
+    //printf("The value is %s\n", (*value).value.v_utf8.str);
+    switch ((*value).value_type){
+                case BSON_TYPE_UTF8:
+                    printf("The value is %s\n", (*value).value.v_utf8.str);
+                    break;
+                case BSON_TYPE_DOCUMENT:
+                     printf("Yes! We found a document embedded key [%s]!\n", bson_iter_key(doc));
+                     bson_iter_recurse (doc, &sub_iter);
+                     while (bson_iter_next (&sub_iter)) {
+                        //printf ("Found YYY key \"%s\" in sub document.\n",
+                        //bson_iter_key (&sub_iter));
+                        //puts("BOOOM!");
+                        iter_recursively(&sub_iter);
+                    }
+                    break;
+                case BSON_TYPE_ARRAY:
+                    printf("Yes! We found an array embedded!\n");
+                    bson_iter_recurse (doc, &sub_iter);
+                    while (bson_iter_next (&sub_iter)) {
+                        printf ("Found XXX key \"%s\" in sub document.\n",
+                        bson_iter_key (&sub_iter));
+                    }
+                    break;
+                case BSON_TYPE_INT32:
+                    printf("We found an int %d!\n", bson_iter_int32(doc));
+                    break;
+                case BSON_TYPE_DOUBLE:
+                    printf("We found a double %f!\n", bson_iter_double(doc));
+
+                    break;
+                default:
+                    printf("Don't know what we found %d!\n", (*value).value_type);
+                }
+}
+
 int
 main (int   argc,
               char *argv[])
@@ -39,14 +80,13 @@ main (int   argc,
                 value = bson_iter_value(&iter);
                 switch ((*value).value_type){
                 case BSON_TYPE_UTF8:
-                    printf("(UTF-8)\nThe value is %s\n", (*value).value.v_utf8.str);
+                    printf("The value is %s\n", (*value).value.v_utf8.str);
                     break;
                 case BSON_TYPE_DOCUMENT:
                      printf("Yes! We found a document embedded key [%s]!\n", bson_iter_key(&iter));
                      bson_iter_recurse (&iter, &sub_iter);
                      while (bson_iter_next (&sub_iter)) {
-                        printf ("Found YYY key \"%s\" in sub document.\n",
-                        bson_iter_key (&sub_iter));
+                        iter_recursively(&sub_iter);
                     }
                     break;
                 case BSON_TYPE_ARRAY:
@@ -65,7 +105,7 @@ main (int   argc,
 
                     break;
                 default:
-                    printf("Don't now what we found %d!\n", (*value).value_type);
+                    printf("Don't know what we found %d!\n", (*value).value_type);
                 }
             }
         bson_free(str);
