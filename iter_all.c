@@ -40,6 +40,8 @@ iter_recursively(bson_iter_t *doc){
         default:
             printf("Don't know what we found %d!\n", (*value).value_type);
         }
+
+    return doc;
 }
 
 int
@@ -74,8 +76,9 @@ main (int   argc, char *argv[])
             while (bson_iter_next (&iter)) {
                 iter_recursively(&iter);
             }
-        bson_free(str);
+
         }
+        bson_free(str);
     }
     bson_destroy(query);
     mongoc_cursor_destroy(cursor);
