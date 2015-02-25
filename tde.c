@@ -235,38 +235,63 @@ extract_values(wchar_t **column_values,
 }
 
 
+bson_iter_t *
+iter_recursively(bson_iter_t *doc){
+
+    bson_iter_t sub_iter;
+    const bson_value_t * value;
+    printf ("Key %s\n", bson_iter_key (doc));
+    value = bson_iter_value(doc);
+    switch ((*value).value_type){
+        case BSON_TYPE_UTF8:
+            printf("String %s\n", (*value).value.v_utf8.str);
+            break;
+
+        case BSON_TYPE_DOCUMENT:
+             bson_iter_recurse (doc, &sub_iter);
+             while (bson_iter_next (&sub_iter)) {
+                iter_recursively(&sub_iter);
+            }
+            break;
+
+        case BSON_TYPE_ARRAY:
+            printf("Array!\n");
+            while (bson_iter_next (&sub_iter)) {
+                    iter_recursively(&sub_iter);
+            }
+            break;
+
+        case BSON_TYPE_INT32:
+            printf("Int %d!\n", bson_iter_int32(doc));
+            break;
+
+        case BSON_TYPE_DOUBLE:
+            printf("Double %f!\n", bson_iter_double(doc));
+            break;
+
+        default:
+            printf("Don't know what we found %d!\n", (*value).value_type);
+        }
+
+    return doc;
+}
+
 /*
  * Get keys and types and store them in string arrays
  */
 void get_keys_values(wchar_t **column_names, TAB_TYPE *column_types,
                      const bson_t *doc){
     bson_iter_t iter;
-    const bson_value_t *value;
+
     int cn = 0;
     int ct = 0;
 
+    cn = ct / 2;
+    ct = cn / 2;
     if (bson_iter_init (&iter, doc)) {
         while (bson_iter_next (&iter)) {
-            column_names[cn] = char_to_wchar(bson_iter_key(&iter));
-            cn++;
-            value = bson_iter_value(&iter);
-
-            switch ((*value).value_type){
-                case BSON_TYPE_UTF8:
-                    column_types[ct] = TAB_TYPE_UnicodeString;
-                    ct++;
-                    break;
-                case BSON_TYPE_INT32:
-                case BSON_TYPE_INT64:
-                    column_types[ct] = TAB_TYPE_Integer;
-                    ct++;
-                    break;
-                default:
-                    break;
-
+            iter_recursively(&iter);
             }
-
-        }
     }
 }
 
