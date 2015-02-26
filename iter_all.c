@@ -4,11 +4,13 @@
 
 
 bson_iter_t *
-iter_recursively(bson_iter_t *doc){
-
+iter_recursively(bson_iter_t *doc, bson_t *master_doc){
+    int signed v;
     bson_iter_t sub_iter;
+    bson_iter_t master_iter;
     const bson_value_t * value;
-    printf ("Key %s\n", bson_iter_key (doc));
+    const char *key = bson_iter_key(doc);
+    //printf ("Key %s\n", key);
     value = bson_iter_value(doc);
     switch ((*value).value_type){
         case BSON_TYPE_UTF8:
@@ -16,21 +18,41 @@ iter_recursively(bson_iter_t *doc){
             break;
 
         case BSON_TYPE_DOCUMENT:
-             bson_iter_recurse (doc, &sub_iter);
-             while (bson_iter_next (&sub_iter)) {
-                iter_recursively(&sub_iter);
+             bson_iter_recurse(doc, &sub_iter);
+             while (bson_iter_next(&sub_iter)) {
+                iter_recursively(&sub_iter, master_doc);
             }
             break;
 
         case BSON_TYPE_ARRAY:
             printf("Array!\n");
-            while (bson_iter_next (&sub_iter)) {
-                    iter_recursively(&sub_iter);
+            while (bson_iter_next(&sub_iter)) {
+                    iter_recursively(&sub_iter, master_doc);
             }
             break;
 
         case BSON_TYPE_INT32:
-            printf("Int %d!\n", bson_iter_int32(doc));
+            v = bson_iter_int32(doc);
+            //printf("Int %d!\n", v);
+            if (bson_has_field(master_doc, key)){
+                if (bson_iter_init (&master_iter, master_doc)){
+                     /* instead of appending an iteger we should increment:
+                      *
+                      * {"Int32: v"}
+                      * */
+                    while (bson_iter_next(&master_iter)) {
+                        v = bson_iter_int32 (&master_iter);
+                        bson_iter_overwrite_int32(&master_iter, v+1);
+                    }
+                }
+            } else {
+                //printf("I saw %s\n", key);
+                /* instead of appending an iteger we should append:
+                 *
+                 * {"Int32: 1"}
+                 * */
+                bson_append_int32(master_doc, key, -1, 1);
+            }
             break;
 
         case BSON_TYPE_DOUBLE:
@@ -52,7 +74,7 @@ main (int   argc, char *argv[])
     mongoc_client_t *client;
     mongoc_collection_t *collection;
     mongoc_cursor_t *cursor;
-
+    bson_t *master_doc;
     bson_t *query;
     char *str;
     /* bson_iter_t iter - is meant to be used on the stack and can be
@@ -64,6 +86,7 @@ main (int   argc, char *argv[])
     //bson_type_t type; // we can use that, but it's quite redundant.
     mongoc_init ();
 
+    master_doc = bson_new();
     client = mongoc_client_new ("mongodb://localhost:27017/");
     collection = mongoc_client_get_collection (client, "testtde", "test");
     query = bson_new ();
@@ -74,13 +97,16 @@ main (int   argc, char *argv[])
         str = bson_as_json (doc, NULL);
         if (bson_iter_init (&iter, doc)) {
             while (bson_iter_next (&iter)) {
-                iter_recursively(&iter);
+                iter_recursively(&iter, master_doc);
             }
 
         }
         bson_free(str);
     }
+
+    printf("Master doc is: %s\n", bson_as_json(master_doc, NULL));
     bson_destroy(query);
+    bson_destroy(master_doc);
     mongoc_cursor_destroy(cursor);
     mongoc_collection_destroy(collection);
     mongoc_client_destroy(client);
